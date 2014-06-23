@@ -23,7 +23,7 @@ var router = require('./server');
 var app = express();
 
 // all environments
-app.set('port', process.env.PORT || 3003, "127.0.0.1");
+app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3003, "127.0.0.1");
 
 // config
 app.set('views', __dirname + '/client/view');

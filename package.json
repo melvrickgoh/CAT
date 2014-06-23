@@ -3,6 +3,9 @@
   "description": "CAT test app",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+    "start": "node app.js --websocket-port=$OPENSHIFT_NODEJS_PORT --log-level=1"
+	}
   "dependencies": {
     "express": "4.4.4",
     "ejs":"1.0.0",
