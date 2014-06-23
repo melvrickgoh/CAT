@@ -1,8 +1,12 @@
+var username,email,lastAttemptedLesson;
+
 function User(options){
-	var username = options.username,
+	username = options.username,
 	email = options.email,
 	lastAttemptedLesson = options.lastLessonID;
 }
+
+User.prototype.constructor = User;
 
 User.prototype.getUsername = function(){
 	return username;
@@ -17,7 +21,7 @@ User.prototype.getLastLesson = function(){
 }
 
 User.prototype.logAttributes = function(){
-console.log('Username: ' + username + '\nEmail: ' + email + '\nLesson' + lastAttemptedLesson);
+	console.log('Username: ' + username + '\nEmail: ' + email + '\nLesson' + lastAttemptedLesson);
 }
 
-module.exports.User;
+module.exports = User;
