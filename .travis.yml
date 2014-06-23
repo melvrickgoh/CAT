@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+- '0.10'
+deploy:
+  provider: openshift
+  user: melvrickgoh
+  password:
+    secure: nx689emtziDgiHN18ZGosObyWen+HBAFOOF3MLOwH/SaiL6jgrIp8qeTO1LoXJjHPk5Qj/hOsHpbNBngUkJHbkumbeuI5jLX+iZVzM7XoJRvHAsbGG1U2gAewcGz6NDKshcKsQ2mimO+BCXXyk9Hf1CVZXkUVD82a3IPe1qc7j8=
+  app: CAT
+  domain: cat-melvrickgoh
+  on:
+    repo: melvrickgoh/CAT
