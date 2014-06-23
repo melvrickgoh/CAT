@@ -1,27 +1,38 @@
-var username,email,lastAttemptedLesson;
-
 function User(options){
-	username = options.username,
-	email = options.email,
-	lastAttemptedLesson = options.lastLessonID;
+	this.username = options.username,
+	this.email = options.email,
+	this.lastAttemptedLesson = options.lastLessonID,
+	this.lastVisit = options.lastVisit ? options.lastVisit: new Date();
 }
 
 User.prototype.constructor = User;
 
 User.prototype.getUsername = function(){
-	return username;
+	return this.username;
 }
 
 User.prototype.getEmail = function(){
-	return email;
+	return this.email;
 }
 
 User.prototype.getLastLesson = function(){
-	return lastAttemptedLesson;
+	return this.lastAttemptedLesson;
+}
+
+User.prototype.getLastVisit = function(){
+	return this.lastVisit;
+}
+
+User.prototype.getLastVisitMilliseconds = function(){
+	return this.lastVisit.getLastVisitMilliseconds();
 }
 
 User.prototype.logAttributes = function(){
-	console.log('Username: ' + username + '\nEmail: ' + email + '\nLesson' + lastAttemptedLesson);
+	console.log('Username: ' + this.username + '\nEmail: ' + this.email + '\nLesson' + lastAttemptedLesson);
+}
+
+User.prototype.logVisit = function(){
+	this.lastVisit = new Date();
 }
 
 module.exports = User;
