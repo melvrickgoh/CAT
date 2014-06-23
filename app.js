@@ -24,7 +24,7 @@ var app = express();
 
 // all environments
 app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3003, "127.0.0.1");
-
+app.set('ipaddress', process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1");
 // config
 app.set('views', __dirname + '/client/view');
 app.set('view engine', 'ejs');
@@ -81,6 +81,6 @@ if ('development' == app.get('env')) {
 app.use('/', router.index);
 
 // Run server
-http.createServer(app).listen(app.get('port'), function(){
+http.createServer(app).listen(app.get('port'), app.get('ipaddress'),function(){
   console.log('Express server listening on port ' + app.get('port'));
 });
