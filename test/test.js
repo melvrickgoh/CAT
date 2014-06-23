@@ -12,8 +12,6 @@ describe('User', function(){
     lastAttemptedLesson:"hello"
   });
 
-  console.log(mel);
-
   it('should be able to call username',function(){
     assert.equal('Mel',mel.getUsername());
     //done();

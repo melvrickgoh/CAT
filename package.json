@@ -15,7 +15,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js --websocket-port=$OPENSHIFT_NODEJS_PORT --log-level=1",
-    "test": "mocha --require test/support/env --reporter dot --check-leaks test/ "
+    "test": "mocha test/ "
   },
   "engines": {
     "node": ">= 0.10.0",
