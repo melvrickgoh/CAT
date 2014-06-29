@@ -13,7 +13,9 @@ methodOverride = require('method-override'),
 cookie = require('cookie'),
 cookieParser = require('cookie-parser'),
 session = require('express-session'),
-errorHandler = require('errorhandler');
+errorHandler = require('errorhandler'),
+pgDAO = require('./server/dao/index');
+
 
 /**
  * Internal dependencies.
@@ -82,5 +84,8 @@ app.use('/', router.index);
 
 // Run server
 http.createServer(app).listen(app.get('port'), app.get('ipaddress'),function(){
+  var dao = new pgDAO();
+  dao.initialize();
+
   console.log('Express server listening on port ' + app.get('port'));
 });
