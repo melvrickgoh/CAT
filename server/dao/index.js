@@ -64,7 +64,7 @@ pgDAO.prototype.getConnection = function(queryObject,callback,errCallback){
   });
 }
 
-pgDAO.prototype.selectTable = function(details,callback){
+pgDAO.prototype.select = function(details,callback){
 	var query = this.generateSelectQuery(details);
 
 	this.getConnection(query,function(err,result){

@@ -241,7 +241,7 @@ describe('DAO', function(){
 
     dao.createTable(tableDetails,function(isSuccess,result){
       dao.insert(insertDetails,function(isSuccess,result){
-        dao.selectTable(selectDetails,function(isSuccess,result){
+        dao.select(selectDetails,function(isSuccess,result){
           assert.equal(3,result.length);
           done();
         });
