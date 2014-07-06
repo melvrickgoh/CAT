@@ -5,8 +5,8 @@ var express = require('express'),
   methods = require('methods'),
   assert = require('assert');
 
-describe('DAO', function(){
-  var dao = new pgDAO({});
+//CONFIG
+var dao = new pgDAO({});
   var tableDetails = {
       name: 'epictable',
       pk:{
@@ -43,6 +43,7 @@ describe('DAO', function(){
       foobars:'helloworldfoo5'
     }];
 
+describe('DAO TABLE', function(){
   it('should be able to generate the basic create table query correctly',function(done){
     
     var tableQuery = 'CREATE TABLE IF NOT EXISTS epictable ( mytable_key SERIAL PRIMARY KEY, moobars VARCHAR(40) NOT NULL, foobars VARCHAR(40));';
@@ -55,7 +56,7 @@ describe('DAO', function(){
     this.timeout(5000);//approx time taken to complete the test
     
     dao.createTable(tableDetails,function(isSuccess,result){
-      var result = dao.checkTableExists(tableDetails.name,function(isSuccess,result){
+      dao.checkTableExists(tableDetails.name,function(isSuccess,result){
         assert.equal(1,result.rowCount);
         done();
       });
@@ -88,7 +89,9 @@ describe('DAO', function(){
       })
     });
   });
+});
 
+describe('DAO INSERT',function(){
   it('should be able to generate single insert query correctly',function(){
     var query = dao.generateInsertQuery(insertDetails);
     var correctQuery = 'INSERT INTO epictable (moobars, foobars) VALUES (\'helloworldmoo\', \'helloworldfoo\');'
@@ -119,7 +122,9 @@ describe('DAO', function(){
     });
 
   });
+});
 
+describe('DAO SELECT',function(){
   it('should be able to generate select query (basic) correctly',function(){
     var selectDetails = {
       name:'epictable'
@@ -236,7 +241,14 @@ describe('DAO', function(){
     var selectDetails = {
       name:'epictable'
     }
-
+    var insertDetails = {
+      name:'epictable',
+      attributes:[{name:'moobars',type:'string'},{name:'foobars',type:'string'}],
+      values:[{
+        moobars:'helloworldmoo',
+        foobars:'helloworldfoo'
+      }]
+    }
     insertDetails.values = additionalInsertDetails;
 
     dao.createTable(tableDetails,function(isSuccess,result){
@@ -244,6 +256,150 @@ describe('DAO', function(){
         dao.select(selectDetails,function(isSuccess,result){
           assert.equal(3,result.length);
           done();
+        });
+      });
+    });
+  });
+});
+
+describe('DAO DELETE',function(){
+  it('should be able to generate basic delete query',function(){
+    var deleteDetails = {
+      name:'epictable',
+      conditions:['mytable_key = 1'],
+      otherTable: {
+        isUsed: false,
+        commonAttribute: 'attr1',
+        select: {
+          //same as the select format as shown above
+        }
+      }
+    }
+
+    var query = dao.generateDeleteQuery(deleteDetails);
+    var correctQuery = 'DELETE FROM epictable WHERE mytable_key = 1;';
+    assert.equal(query,correctQuery);
+  });
+
+  it('should be able to generate delete (other table referenced) query',function(){
+    var deleteDetails = {
+      name:'epictable',
+      conditions:['mytable_key = 1'],
+      otherTable: {
+        isUsed: true,
+        commonAttribute: 'mytable_key',
+        select: {
+          name:'awesometable',
+          distinct: true,
+          attributes:['mytable_key'],
+          conditions:[//conditions are conjoined by AND by default
+            //chain ur custom condition into the array as a single value if complex
+            'name = \'goran pandev\''
+            ],
+          order:'ASC',
+          limit: 10,
+          nesting:true
+        }
+      }
+    }
+
+    var query = dao.generateDeleteQuery(deleteDetails);
+    var correctQuery = 'DELETE FROM epictable WHERE mytable_key IN (SELECT DISTINCT mytable_key FROM awesometable WHERE name = \'goran pandev\' ORDER BY ASC LIMIT 10);';
+    assert.equal(query,correctQuery);
+  });
+
+  it('should be able to execute basic delete query',function(done){
+    this.timeout(10000);
+    var deleteDetails = {
+      name:'epictable',
+      conditions:['mytable_key = 1'],
+      otherTable: {
+        isUsed: false,
+        commonAttribute: 'attr1',
+        select: {
+          //same as the select format as shown above
+        }
+      }
+    }
+
+    dao.createTable(tableDetails,function(isSuccess,result){
+      dao.insert(insertDetails,function(isSuccess,result){
+        dao.delete(deleteDetails,function(isSuccess,result){
+          assert.equal(1,result);
+
+          //clean up test table
+          dao.dropTable(tableDetails.name,function(isSuccess,result){
+            done();
+          });
+        });
+      });
+    });
+  });
+});
+
+describe('DAO UPDATE',function(){
+  it('should be able to generate update(ALL) query',function(){
+    var updateDetails = {
+      name:'epictable',
+      values:[{name:'moobars',type:'string',value:'melvrick'},{name:'foobars',type:'string',value:'melvrick'}]
+    }
+
+    var query = dao.generateUpdateQuery(updateDetails);
+    var correctQuery = 'UPDATE epictable SET moobars = \'melvrick\', foobars = \'melvrick\' ;';
+    assert.equal(query,correctQuery);
+  });
+
+  it('should be able to generate update(conditions) query',function(){
+    var updateDetails = {
+      name:'epictable',
+      values:[{name:'moobars',type:'string',value:'melvrick'},{name:'foobars',type:'string',value:'melvrick'}],
+      conditions:['moobars = \'helloworldmoo\'']
+    }
+
+    var query = dao.generateUpdateQuery(updateDetails);
+    var correctQuery = 'UPDATE epictable SET moobars = \'melvrick\', foobars = \'melvrick\' WHERE moobars = \'helloworldmoo\' ;';
+    assert.equal(query,correctQuery);
+  });
+
+  it('should be able to generate update(conditions & returning) query',function(){
+    var updateDetails = {
+      name:'epictable',
+      values:[{name:'moobars',type:'string',value:'melvrick'},{name:'foobars',type:'string',value:'melvrick'}],
+      conditions:['moobars = \'helloworldmoo\''],
+      returning:['moobars','foobars']
+    }
+
+    var query = dao.generateUpdateQuery(updateDetails);
+    var correctQuery = 'UPDATE epictable SET moobars = \'melvrick\', foobars = \'melvrick\' WHERE moobars = \'helloworldmoo\' RETURNING moobars, foobars;';
+    assert.equal(query,correctQuery);
+  });
+
+  it('should be able to UPDATE(conditions & returning) database',function(done){
+    this.timeout(10000);
+
+    var updateDetails = {
+      name:'epictable',
+      values:[{name:'moobars',type:'string',value:'melvrick'},{name:'foobars',type:'string',value:'melvrick'}],
+      conditions:['moobars = \'helloworldmoo\''],
+      returning:['moobars','foobars']
+    }
+
+    dao.createTable(tableDetails,function(isSuccess,result){
+      dao.insert(insertDetails,function(isSuccess,result){
+        dao.update(updateDetails,function(isSuccess,result){
+
+          var selectDetails = {
+            name:'epictable',
+            conditions:['moobars = \'melvrick\'']
+          }
+
+          dao.select(selectDetails,function(isSuccess,result){
+            assert.equal(true,result.length>0);
+            //clean up test table
+            dao.dropTable(tableDetails.name,function(isSuccess,result){
+              done();
+            });
+          });
         });
       });
     });

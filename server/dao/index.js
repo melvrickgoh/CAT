@@ -34,12 +34,31 @@ function pgDAO (options){
 			name:'table_name',
 			distinct: true,
 			attributes:['attr1','attr2','attr3'],
-			conditions:[
-				{attribute:'attr1',value:'valuetoMatch'},
-				{attribute:'attr2',value:'valuetoMatch2'},
+			conditions:[//conditions are conjoined by AND by default
+				//chain ur custom condition into the array as a single value if complex
+				'attr1 = \'goran pandev\'',
+				'attr2 <> NULL',
 				],
 			order:'ASC|DESC',
-			limit: 'count|ALL'
+			limit: 'count|ALL',
+			nesting: true//for usage by other querys where select is a nested statement
+		},
+		delete:{
+			name:'table_name',
+			conditions:[],
+			otherTable: {
+				isUsed: true,
+				commonAttribute: 'attr1',
+				select: {
+					//same as the select format as shown above
+				}
+			}
+		},
+		update:{
+			name:'table_name',
+			values:[{name:'attr1',type:'string',value:'helloworld'},{name:'attr2',type:'number',value:'helloworld'}],
+			conditions:[],
+			returning:['attr1','attr2','attr3']
 		}
 	}
 }
@@ -64,12 +83,109 @@ pgDAO.prototype.getConnection = function(queryObject,callback,errCallback){
   });
 }
 
+pgDAO.prototype.update = function(details,callback){
+	var query = this.generateUpdateQuery(details);
+
+	this.getConnection(query,function(err,result){
+		if (err){
+			callback(false,err);
+			return;
+		}
+		//returns the number of rows deleted
+		callback(true,{
+			rowCount:result.rowCount,
+			rows:result.rows
+		});
+	});
+}
+
+pgDAO.prototype.generateUpdateQuery = function(details){
+	var query = 'UPDATE ' + details.name + ' SET ';
+
+	//setting up the values
+	var values = details.values;
+	for (var i in values){
+		var obj = values[i];
+
+		query += obj.name + ' = ' + this.generateSQLWrappers(obj.value,obj.type);
+
+		i == values.length-1 ? query+=' ' : query+=', '
+	}
+
+	//conditions
+	var conditions = details.conditions;
+	if (conditions && conditions.length > 0){
+		query += 'WHERE ';
+		for (var i in conditions){
+			var condition = conditions[i];
+			if (i == conditions.length-1){
+				query += condition + ' ';
+			}else{
+				query += condition + ' AND ';
+			}
+		}
+	}
+
+	//returning
+	var returning = details.returning;
+	if (returning && returning.length > 0){
+		query += 'RETURNING '
+		for (var i in returning){
+			var returningAttr = returning[i];
+			if (i == returning.length-1){
+				query += returningAttr;
+			}else{
+				query += returningAttr + ', ';
+			}
+		}
+	}
+
+	return query += ';';
+}
+
+pgDAO.prototype.delete = function(details,callback){
+	var query = this.generateDeleteQuery(details);
+
+	this.getConnection(query,function(err,result){
+		if (err){
+			callback(false,err);
+			return;
+		}
+		//returns the number of rows deleted
+		callback(true,result.rowCount);
+	});
+}
+
+pgDAO.prototype.generateDeleteQuery = function(details){
+	var query = 'DELETE FROM ' + details.name + ' WHERE ';
+
+	if (details.otherTable && details.otherTable.isUsed){
+		query += details.otherTable.commonAttribute + ' IN (';
+
+		query += this.generateSelectQuery(details.otherTable.select);
+
+		query += ');';
+	}else{
+		for (var i in details.conditions){
+			var condition = details.conditions[i];
+			if (i == details.conditions.length-1){
+				query += condition + ';'
+			}else{
+				query += condition + ' AND ';
+			}
+		}
+	}
+
+	return query;
+}
+
 pgDAO.prototype.select = function(details,callback){
 	var query = this.generateSelectQuery(details);
 
 	this.getConnection(query,function(err,result){
 		if (err){
 			callback(false,err);
+			return;
 		}
 		//rows is the array containing the attributes with the column names as keys
 		callback(true,result.rows);
@@ -102,7 +218,7 @@ pgDAO.prototype.generateSelectQuery = function(details){
 
 	//generating matching conditions
 	if (conditions && conditions.length > 0){
-		query += 'WHERE' + ' '
+		query += 'WHERE ';
 		for (var i in conditions){
 			var condition = conditions[i];
 			if (i == conditions.length-1){
@@ -123,6 +239,10 @@ pgDAO.prototype.generateSelectQuery = function(details){
 		query += 'LIMIT ' + details.limit;
 	}
 
+	//nesting of select statement?
+	if (details.nesting){
+		return query;
+	}
 	return query += ';'
 }
 
@@ -132,6 +252,7 @@ pgDAO.prototype.insert = function(details,callback){
 	this.getConnection(query,function(err,result){
 		if (err){
 			callback(false,err);
+			return;
 		}
 		callback(true,result);
 	});
@@ -217,6 +338,7 @@ pgDAO.prototype.createTable = function(details,callback){
 	this.getConnection(query,function(err,result){
 		if (err){
 			callback(false,err);
+			return;
 		}
 		callback(true,result);
 	});
@@ -227,6 +349,7 @@ pgDAO.prototype.dropTable = function(tableName,callback){
 	this.getConnection(query,function(err,result){
 		if (err){
 			callback(false,err);
+			return;
 		}
 		callback(true,result);
 	});
@@ -237,6 +360,7 @@ pgDAO.prototype.truncateTable = function(tableName,callback){
 	this.getConnection(query,function(err,result){
 		if (err){
 			callback(false,err);
+			return;
 		}
 		callback(true,result);
 	});
@@ -249,6 +373,7 @@ pgDAO.prototype.checkTableExists = function(tableName,callback){
 	this.getConnection(query,function(err,result){
 		if (err){
 			callback(false,err);
+			return;
 		}
 
 		mainResult = result;
