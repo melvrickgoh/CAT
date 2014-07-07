@@ -36,4 +36,3 @@ User.prototype.logVisit = function(){
 }
 
 module.exports = User;
-//chmod
