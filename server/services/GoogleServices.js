@@ -2,7 +2,7 @@ var googleapis = require('../lib/googleapis');
 var OAuth2Client = googleapis.OAuth2Client;
 var CLIENT_ID = '614118273237-nogtgnp2dm5u9ruisbgq4tu579nq8800.apps.googleusercontent.com';
 var CLIENT_SECRET = 'usHCpy7ndmuYy1cF3td7ytBV';
-var REDIRECT_URL = 'http://localhost:3003/oauth2callback';
+var REDIRECT_URL = 'http://localhost:3003/google/oauth2callback';
 
 //For Client Side logging in
 var OAuth2 = googleapis.auth.OAuth2;

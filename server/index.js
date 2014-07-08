@@ -70,7 +70,7 @@ main_router.route('/home')
 	
 	});
 
-main_router.route('/monkey')
+main_router.route('/login-google')
 	.all(function(req,res){
 		//res.send('welcome to monkey');
 
@@ -81,7 +81,7 @@ main_router.route('/monkey')
 
 // Redirect the user to Google for authentication.  When complete, Google
 // will redirect the user back to the application at
-main_router.route('/oauth2callback')
+main_router.route('/google/oauth2callback')
 	.all(function(req,res){
 		var code = req.query.code;
   		gSvcs = new GoogleServices();
