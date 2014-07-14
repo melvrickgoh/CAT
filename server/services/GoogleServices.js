@@ -2,7 +2,7 @@ var googleapis = require('../lib/googleapis');
 var OAuth2Client = googleapis.OAuth2Client;
 var CLIENT_ID = '614118273237-nogtgnp2dm5u9ruisbgq4tu579nq8800.apps.googleusercontent.com';
 var CLIENT_SECRET = 'usHCpy7ndmuYy1cF3td7ytBV';
-var REDIRECT_URL = 'http://cat-melvrickgoh.rhcloud.com/' + 'google/oauth2callback';
+var REDIRECT_URL = 'http://localhost:3003/' + 'google/oauth2callback';
 
 //localhost redirect: 'http://localhost:3003/'
 //google redirect: 'http://cat-melvrickgoh.rhcloud.com/'
@@ -14,11 +14,11 @@ var oauth2Client = new OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
 var SERVICE_ACCOUNT_EMAIL = '614118273237-o9khb1d1dqlj54f36jp5nsvjnehvd7i6@developer.gserviceaccount.com';
 var SERVICE_ACCOUNT_KEY_FILE = './server/8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.pem';
 
-var passport = require('passport')
-  , GoogleStrategy = require('passport-google').Strategy;
+//var passport = require('passport')
+//  , GoogleStrategy = require('passport-google').Strategy;
 
 function GoogleServices(options){
-	passport.use(new GoogleStrategy({
+	/*passport.use(new GoogleStrategy({
 	    returnURL: 'http://localhost:3003/',// redirect url after being authenticated 'http://www.example.com/auth/google/return',
 	    realm: 'http://localhost:3003/'//authentication realm of validity
 	  },
@@ -27,7 +27,7 @@ function GoogleServices(options){
 	      done(err, user);
 	    });
 	  }
-	));
+	));*/
 }
 
 GoogleServices.prototype.constructor = GoogleServices;
@@ -40,9 +40,11 @@ GoogleServices.prototype.login = function(response){
 	// generates a url that allows offline access and asks permissions
 	// for Google+ scope.
 	var scopes = [
-	  'https://www.googleapis.com/auth/plus.me',
-	  'https://www.googleapis.com/auth/calendar',
-	  'https://www.googleapis.com/auth/drive'
+		'https://www.googleapis.com/auth/plus.login',
+	  	'https://www.googleapis.com/auth/plus.me',
+	  	'https://www.googleapis.com/auth/plus.profile.emails.read',
+	 	'https://www.googleapis.com/auth/calendar',
+	 	'https://www.googleapis.com/auth/drive'
 	];
 
 	var url = oauth2Client.generateAuthUrl({
@@ -52,38 +54,23 @@ GoogleServices.prototype.login = function(response){
 
 	googleapis
 	  .discover('plus', 'v1')
-	  .discover('calendar', 'v3')
+	  //.discover('calendar', 'v3')
   	  .discover('oauth2', 'v2')
   	  .discover('drive','v2')
 	  .execute(function(err, client) {
 	  		response.writeHead(302, {location: url});
     		response.end();
-	  	  //console.log(client);
-		  // retrieve an access token
-		 // getAccessToken(oauth2Client, url, function() {
-		    // retrieve user profile
-		    /*getUserProfile(client, oauth2Client, 'me', function(err, profile) {
-		      if (err) {
-		        console.log('An error occured', err);
-		        return;
-		      }
-		      console.log(profile.displayName, ':', profile.tagline);
-		    });*/
-		  //});
-
 		});
 }
 
 GoogleServices.prototype.loginCallback = function(code,response){
-	getAccessToken(code,function(tokens){
-		console.log(tokens);
+	this.getAccessToken(code,function(tokens){
 		response.send(JSON.stringify(tokens));
-	})
+	});
 }
 
-function getAccessToken(code, callback) {
+GoogleServices.prototype.getAccessToken =function(code, callback) {
     // request access token
-    console.log(code);
   oauth2Client.getToken(code, function(err, tokens) {
     console.log(err);
     // set tokens to the client
@@ -93,12 +80,50 @@ function getAccessToken(code, callback) {
   });
 }
 
-function getUserProfile(client, authClient, userId, callback) {
-  client
+GoogleServices.prototype.getUserProfile = function(code,callback){
+  getAccessToken(code,function(oauth2Client){
+  	_executeCommand(oauth2Client,function(client,oauth2Client){
+  		_getUserProfile(client,oauth2Client,'me',callback);
+  	});
+  });
+}
+
+function _getUserProfile(client, authClient, userId, callback){
+	console.log(client);
+	/*client
     .plus.people.get({ userId: userId })
     .withAuthClient(authClient)
-    .execute(callback);
+    .execute(callback);*/
+    client.plus.people.get({ userId: userId }).withAuthClient(authClient).execute(callback);
+    //client.oauth2.userinfo.get().withAuthClient(authClient).execute(callback);
 }
+
+function _executeCommand(oauth2Client,callback){
+	googleapis
+	  .discover('plus', 'v1')
+	  //.discover('calendar', 'v3')
+  	  .discover('oauth2', 'v2')
+  	  .discover('drive','v2')
+	  .execute(function(err, client) {
+	  		callback(client,oauth2Client);
+	   });
+}
+
+
+function getAccessToken(code, callback) {
+    // request access token
+  	oauth2Client.getToken(code, function(err, tokens) {
+  		if (err) {
+	        console.log('An error occured', err);
+	        return;
+		}
+  	    // set tokens to the client
+   	 	// TODO: tokens should be set by OAuth2 client.
+   	 	oauth2Client.setCredentials(tokens);
+   		callback(oauth2Client);
+ 	});
+}
+
 
 /*
 * Application Drive is accessed via this method

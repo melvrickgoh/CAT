@@ -1,14 +1,45 @@
 function User(options){
-	this.username = options.username,
+	this.id = options.id,
+	this.etag = options.etag,
+	this.gender = options.gender,
+	this.googleURL = options.googleURL,
+	this.displayName = options.displayName,
+	this.name = options.name,
+	this.image = options.image,
 	this.email = options.email,
+
 	this.lastAttemptedLesson = options.lastLessonID,
 	this.lastVisit = options.lastVisit ? options.lastVisit: new Date();
 }
 
 User.prototype.constructor = User;
 
-User.prototype.getUsername = function(){
-	return this.username;
+User.prototype.getID = function(){
+	return this.id;
+}
+
+User.prototype.getETag = function(){
+	return this.etag;
+}
+
+User.prototype.getGender = function(){
+	return this.gender;
+}
+
+User.prototype.getGoogleURL = function(){
+	return this.googleURL;
+}
+
+User.prototype.getDisplayName = function(){
+	return this.displayName;
+}
+
+User.prototype.getName = function(){
+	return this.name;
+}
+
+User.prototype.getImage = function(){
+	return this.image;
 }
 
 User.prototype.getEmail = function(){
@@ -28,7 +59,7 @@ User.prototype.getLastVisitMilliseconds = function(){
 }
 
 User.prototype.logAttributes = function(){
-	console.log('Username: ' + this.username + '\nEmail: ' + this.email + '\nLesson' + lastAttemptedLesson);
+	console.log('Username: ' + this.displayName + '\nEmail: ' + this.email + '\nLesson' + lastAttemptedLesson);
 }
 
 User.prototype.logVisit = function(){
