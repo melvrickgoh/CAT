@@ -40,7 +40,8 @@
     "model": "0.5.16",
     "pg.js": "3.3.0",
     "googleapis": "0.8.0",
-    "request": "2.36.0"
+    "request": "2.36.0",
+    "connect-pg-simple":"2.0.0"
   },
   "devDependencies": {
     "after": "^0.8.1",

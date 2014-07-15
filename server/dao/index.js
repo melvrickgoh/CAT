@@ -332,8 +332,35 @@ pgDAO.prototype.conditionalRowCount = function(tableName,conditions,callback){
 	});
 }
 
-pgDAO.prototype.createTable = function(details,callback){
+pgDAO.prototype.createSessionTable = function(callback){
+	this.checkTableExists('session',function(exists,result){
+		if (exists){
+			callback('Session Table Exists, continue server processing',result);
+		}else{
+			var query = 'CREATE TABLE IF NOT EXISTS "session" ("sid" varchar NOT NULL COLLATE "default","sess" json NOT NULL,"expire" timestamp(6) NOT NULL) WITH (OIDS=FALSE);',
+			alterQuery = 'ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;',
+			local = this;
 
+			this.getConnection(query,function(err,result){
+				if (err){
+					callback('Error occurred while creating session table',err);
+					return;
+				}else{//alter the sessions table once ready
+					local.getConnection(alterQuery,function(err,result){
+						if (err){
+							callback('Error occurred while altering session table',err);
+							return;
+						}else{
+							callback('Session table created successfully',result);
+						}
+					});
+				}
+			});
+		}
+	});
+}
+
+pgDAO.prototype.createTable = function(details,callback){
 	var query = this.generateCreateTableQuery(details);
 	this.getConnection(query,function(err,result){
 		if (err){
@@ -375,9 +402,7 @@ pgDAO.prototype.checkTableExists = function(tableName,callback){
 			callback(false,err);
 			return;
 		}
-
-		mainResult = result;
-		callback(true,mainResult);
+		callback(true,result);
 	});
 }
 

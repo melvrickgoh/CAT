@@ -19,6 +19,7 @@ UserController.prototype.processLogin = function(user,callback){
 			dao.insertNewUser(user,function(isSuccess,result){
 				callback('Insert User',isSuccess,result);//to be updated on the dao being updated
 			});
+			return;
 		}
 	});
 }

@@ -72,7 +72,7 @@ GoogleServices.prototype.loginCallback = function(code,response){
 GoogleServices.prototype.getAccessToken =function(code, callback) {
     // request access token
   oauth2Client.getToken(code, function(err, tokens) {
-    console.log(err);
+    //console.log(err);
     // set tokens to the client
     // TODO: tokens should be set by OAuth2 client.
     oauth2Client.setCredentials(tokens);

@@ -1,4 +1,4 @@
-var pgDAO = require('index');
+var pgDAO = require('./index');
 var dao = new pgDAO({});
 function UserDAO(options){
 	this.TABLENAME = 'users';
@@ -34,17 +34,17 @@ UserDAO.prototype.createUserTable = function(){
 	};
 
 	dao.createTable(userDetails,function(isSuccess,result){
-		dao.checkTableExists(tableDetails.name,function(isSuccess,result){
-			console.log('User table creation is > ' isSuccess);
+		dao.checkTableExists(userDetails.name,function(isSuccess,result){
+			console.log('User table creation is > ' + isSuccess);
       });
 	});
 }
 
-UserDAO.prototype.insertNewUser(user,callback){
-	this.insertNewUsers([user]);
+UserDAO.prototype.insertNewUser = function(user,callback){
+	this.insertNewUsers([user],callback);
 }
 
-UserDAO.prototype.insertNewUsers(users,callback){
+UserDAO.prototype.insertNewUsers = function(users,callback){
 	var userExtracts = this.extractUsersDetails(users);
 	var newUserDetails = {
 		name:this.TABLENAME,
@@ -57,7 +57,7 @@ UserDAO.prototype.insertNewUsers(users,callback){
 	});
 }
 
-UserDAO.prototype.extractUsersDetails(users){
+UserDAO.prototype.extractUsersDetails = function(users){
 	var extract = [];
 	for (var i in users){
 		var user = users[i];
@@ -66,13 +66,13 @@ UserDAO.prototype.extractUsersDetails(users){
 			givenName:user.name.givenName,
 			email:user.email,
 			gender:user.gender,
-			lastVisit:user.lastVisit.getMilliseconds()
+			lastVisit:user.lastVisit.getTime()
 		});
 	}
 	return extract;
 }
 
-UserDAO.prototype.checkUserExists(user,callback){
+UserDAO.prototype.checkUserExists = function(user,callback){
 	var selectUserDetails = {
 		name:this.TABLENAME,
 		distinct:false,
@@ -82,26 +82,28 @@ UserDAO.prototype.checkUserExists(user,callback){
 	dao.select(selectUserDetails,function(isSuccess,result){
 		if (result.length >= 1){
 			callback(true);//selected length >= 1
+		}else{
+			callback(false);//selected length is 0 or less
 		}
-		callback(false);//selected length is 0 or less
 	});
 }
 
-UserDAO.prototype.updateUser(user,callback){
+UserDAO.prototype.updateUser = function(user,callback){
 	var updateUserDetails = {
 		name:this.TABLENAME,
 		values:[{
 			name:'lastVisit',
 			type:'BIGINT',
-			value:user.lastVisit.getMilliseconds()
+			value:user.lastVisit.getTime()
 		}],
 		conditions:['id = \'' + user.id + '\'']
 	}
 	dao.update(updateUserDetails,function(isSuccess,result){
-		if (result.length >= 1){
+		if (result.rowCount >= 1){
 			callback(true);//selected length >= 1
+		}else{
+			callback(false);//selected length is 0 or less
 		}
-		callback(false);//selected length is 0 or less
 	});
 }
 

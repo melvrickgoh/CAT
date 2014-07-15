@@ -2,7 +2,8 @@
  * GET home page.
  */
 
-var User = require('./entity/user'),
+var BootstrapManager = require('./dao/BootstrapManager'),
+User = require('./entity/user'),
 UserController = require('./controller/UserController'),
 GoogleServices = require('./services/GoogleServices'),
 express = require('express'),
@@ -38,7 +39,9 @@ var rl = readline.createInterface({
 /*
 * APP Classes
 */
-var uController = new UserController();
+
+var bootstrapper = new BootstrapManager(),
+uController = new UserController();
 
 main_router.route('/')
 	.all(function(req,res){
@@ -106,18 +109,20 @@ main_router.route('/google/oauth2callback')
 	      }
 
 	      var loggedInUser = new User({
-	      	id: result.id,
-	      	etag: result.etag,
-	      	gender: result.gender,
-	      	googleURL: result.url,
-	      	displayName: result.displayName,
-	      	name: result.name,
-	      	image: result.image,
-	      	email: result.emails[0].value? result.emails[0].value : 'no email',
+	      	id: results.id,
+	      	etag: results.etag,
+	      	gender: results.gender,
+	      	googleURL: results.url,
+	      	displayName: results.displayName,
+	      	name: results.name,
+	      	image: results.image,
+	      	email: results.emails[0].value? results.emails[0].value : 'no email',
 	      	lastVisit: new Date()
 	      });
 	      uController.processLogin(loggedInUser,function(action,isSuccess,result){
 	      	console.log('User logged in: Process Login via DAO' + action + ' > ' + isSuccess);
+	      	//req.session.user = loggedInUser; //set the session to that of this user
+	      	res.send('User logged in: Process Login via DAO' + action + ' > ' + isSuccess);
 	      });
 	    });
 

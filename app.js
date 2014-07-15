@@ -12,7 +12,10 @@ bodyParser = require('body-parser'),
 methodOverride = require('method-override'),
 cookie = require('cookie'),
 cookieParser = require('cookie-parser'),
+pg = require('pg.js'),
 session = require('express-session'),
+pgSession = require('connect-pg-simple')(session),
+
 errorHandler = require('errorhandler'),
 pgDAO = require('./server/dao/index');
 
@@ -51,12 +54,20 @@ app.use(methodOverride());
 // Use cookies
 app.use(cookieParser());
 //Session variable
-var sess = {
+app.use(session({
+  store: new pgSession({
+    pg : pg,
+    conString : 'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat'
+  }),
+  secret: process.env.FOO_COOKIE_SECRET || 'usHCpy7ndmuYy1cF3td7ytBV',//HMAC implementation for certifying modifications to the session's values
+  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
+}));
+/*var sess = {
 	secret: 'keyboard cat',
 	cookie: {}//below action for dev and production sets secure cookies to true
 }
-app.use(session(sess));
-app.use(function(req, res, next){                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+app.use(session(sess));*/
+/*app.use(function(req, res, next){                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
   var err = req.session.error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
     , msg = req.session.success;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
   delete req.session.error;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
@@ -65,7 +76,7 @@ app.use(function(req, res, next){
   if (err) res.locals.message = '<p class="msg error">' + err + '</p>';                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
   if (msg) res.locals.message = '<p class="msg success">' + msg + '</p>';                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
   next();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-});
+});*/
 
 app.use(require('stylus').middleware(__dirname + '/client'));
 app.use(express.static(path.join(__dirname, 'client/')));
