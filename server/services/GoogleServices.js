@@ -9,7 +9,6 @@ var REDIRECT_URL = 'http://localhost:3003/' + 'google/oauth2callback';
 
 //For Client Side logging in
 var OAuth2 = googleapis.auth.OAuth2;
-var oauth2Client = new OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
 
 var SERVICE_ACCOUNT_EMAIL = '614118273237-o9khb1d1dqlj54f36jp5nsvjnehvd7i6@developer.gserviceaccount.com';
 var SERVICE_ACCOUNT_KEY_FILE = './server/8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.pem';
@@ -39,6 +38,7 @@ GoogleServices.prototype.getOAuthClient = function(){
 GoogleServices.prototype.login = function(response){
 	// generates a url that allows offline access and asks permissions
 	// for Google+ scope.
+	var oauth2Client = new OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
 	var scopes = [
 		'https://www.googleapis.com/auth/plus.login',
 	  	'https://www.googleapis.com/auth/plus.me',
@@ -71,31 +71,47 @@ GoogleServices.prototype.loginCallback = function(code,response){
 
 GoogleServices.prototype.getAccessToken =function(code, callback) {
     // request access token
+  var oauth2Client = new OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
   oauth2Client.getToken(code, function(err, tokens) {
     //console.log(err);
     // set tokens to the client
     // TODO: tokens should be set by OAuth2 client.
     oauth2Client.setCredentials(tokens);
-    callback();
+    callback(oauth2Client);
   });
 }
 
 GoogleServices.prototype.getUserProfile = function(code,callback){
-  getAccessToken(code,function(oauth2Client){
+  getAccessToken(code,function(oauth2Client,tokens){
   	_executeCommand(oauth2Client,function(client,oauth2Client){
-  		_getUserProfile(client,oauth2Client,'me',callback);
+  		_getUserProfile(client,oauth2Client,'me',function(err,results){callback('profile',err,results,tokens,oauth2Client);});
   	});
   });
 }
 
+GoogleServices.prototype.getDriveProfile = function(code,callback){
+	getAccessToken(code,function(oauth2Client,tokens){
+	  	_executeCommand(oauth2Client,function(client,oauth2Client){
+	  		_getDriveProfile(client,oauth2Client,'me',function(err,results){callback('drive',err,results,tokens,oauth2Client);});
+	  	});
+	});
+}
+
+GoogleServices.prototype.getUserAndDriveProfile = function(code,callback){
+	getAccessToken(code,function(oauth2Client,tokens){
+	  	_executeCommand(oauth2Client,function(client,oauth2Client){
+	  		_getUserProfile(client,oauth2Client,'me',function(err,results){callback('profile',err,results,tokens,oauth2Client);});
+	  		_getDriveProfile(client,oauth2Client,'me',function(err,results){callback('drive',err,results,tokens,oauth2Client);});
+	  	});
+	});
+}
+
 function _getUserProfile(client, authClient, userId, callback){
-	console.log(client);
-	/*client
-    .plus.people.get({ userId: userId })
-    .withAuthClient(authClient)
-    .execute(callback);*/
     client.plus.people.get({ userId: userId }).withAuthClient(authClient).execute(callback);
-    //client.oauth2.userinfo.get().withAuthClient(authClient).execute(callback);
+}
+
+function _getDriveProfile(client, authClient, userId, callback){
+	client.drive.files.list().withAuthClient(authClient).execute(callback);
 }
 
 function _executeCommand(oauth2Client,callback){
@@ -111,16 +127,19 @@ function _executeCommand(oauth2Client,callback){
 
 
 function getAccessToken(code, callback) {
+    var oauth2Client = new OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
     // request access token
   	oauth2Client.getToken(code, function(err, tokens) {
   		if (err) {
+  			console.log(err);
 	        console.log('An error occured', err);
 	        return;
 		}
   	    // set tokens to the client
    	 	// TODO: tokens should be set by OAuth2 client.
    	 	oauth2Client.setCredentials(tokens);
-   		callback(oauth2Client);
+
+   		callback(oauth2Client,tokens);
  	});
 }
 

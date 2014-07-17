@@ -89,6 +89,17 @@ if ('development' == app.get('env')) {
   sess.cookie.secure = true // serve secure cookies
 }
 
+app.get("/*", function(req, res, next){
+
+    if(typeof req.cookies['connect.sid'] !== 'undefined'){
+        console.log(req.cookies['connect.sid']);
+        next(); // call the next middleware
+    }else{
+      req.session.error = 'Access denied!';                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+      res.redirect('/login');
+    }
+});
+
 //general ROUTER
 app.use('/', router.index);
 

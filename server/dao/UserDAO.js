@@ -29,15 +29,21 @@ UserDAO.prototype.createUserTable = function(){
 				name:'lastVisit',
 				type:'BIGINT',
 				isCompulsory:false
+			},{
+				name:'refreshToken',
+				type:'VARCHAR(50)',
+				isCompulsory:false
 			}
 		]
 	};
-
-	dao.createTable(userDetails,function(isSuccess,result){
-		dao.checkTableExists(userDetails.name,function(isSuccess,result){
-			console.log('User table creation is > ' + isSuccess);
-      });
-	});
+	//dao.dropTable(userDetails.name,function(isSuccess,result){
+		dao.createTable(userDetails,function(isSuccess,result){
+			dao.checkTableExists(userDetails.name,function(isSuccess,result){
+				console.log('User table creation is > ' + isSuccess);
+	      });
+		});
+	//});
+	
 }
 
 UserDAO.prototype.insertNewUser = function(user,callback){
@@ -49,7 +55,8 @@ UserDAO.prototype.insertNewUsers = function(users,callback){
 	var newUserDetails = {
 		name:this.TABLENAME,
 		attributes:[{name:'id',type:'string'},{name:'givenName',type:'string'},
-			{name:'email',type:'string'},{name:'gender',type:'string'},{name:'lastVisit',type:'BIGINT'}],
+			{name:'email',type:'string'},{name:'gender',type:'string'},{name:'lastVisit',type:'BIGINT'},
+			{name:'refreshToken',type:'string'}],
 		values:userExtracts
 	};
 	dao.insert(newUserDetails,function(isSuccess,result){
@@ -66,7 +73,8 @@ UserDAO.prototype.extractUsersDetails = function(users){
 			givenName:user.name.givenName,
 			email:user.email,
 			gender:user.gender,
-			lastVisit:user.lastVisit.getTime()
+			lastVisit:user.lastVisit.getTime(),
+			refreshToken:user.refreshToken
 		});
 	}
 	return extract;
@@ -95,6 +103,10 @@ UserDAO.prototype.updateUser = function(user,callback){
 			name:'lastVisit',
 			type:'BIGINT',
 			value:user.lastVisit.getTime()
+		},{
+			name:'refreshToken',
+			type:'string',
+			value:user.refreshToken
 		}],
 		conditions:['id = \'' + user.id + '\'']
 	}

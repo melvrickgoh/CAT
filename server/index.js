@@ -4,6 +4,7 @@
 
 var BootstrapManager = require('./dao/BootstrapManager'),
 User = require('./entity/user'),
+File = require('./entity/file'),
 UserController = require('./controller/UserController'),
 GoogleServices = require('./services/GoogleServices'),
 express = require('express'),
@@ -37,6 +38,11 @@ var rl = readline.createInterface({
 });
 
 /*
+*	Helper Downloads
+*/
+var prettyjson = require('prettyjson');
+
+/*
 * APP Classes
 */
 
@@ -51,6 +57,11 @@ main_router.route('/')
 main_router.route('/login')
 	.all(function(req,res){
 		res.render('login.ejs');
+	});
+
+main_router.route('/mydrive')
+	.all(function(req,res){
+		res.render('mydrive.ejs');
 	});
 
 // Google will redirect the user to this URL after authentication.  Finish
@@ -101,32 +112,78 @@ main_router.route('/google/oauth2callback')
   		/*authClient.getToken(code, function(err, tokens){
 		    res.send(JSON.stringify(tokens));
 		});*/
+		var returnCounter = 0;
+		var loggedInUser = new User({}),
+		files = [];
 
-		gSvcs.getUserProfile(code,function(err, results) {
+		gSvcs.getUserAndDriveProfile(code,function(resultType,err,results,tokens,oauth2Client) {
 	      if (err) {
 	        console.log('An error occured', err);
 	        return;
+	      }else{
+	      	switch(resultType){
+	      		case 'profile':
+	      			loggedInUser.id = results.id,
+			      	loggedInUser.etag = results.etag,
+			      	loggedInUser.gender = results.gender,
+			      	loggedInUser.googleURL = results.url,
+			      	loggedInUser.displayName = results.displayName,
+			      	loggedInUser.name = results.name,
+			      	loggedInUser.image = results.image,
+			      	loggedInUser.email = results.emails[0].value? results.emails[0].value : 'no email',
+			      	loggedInUser.lastVisit = new Date();
+
+			      	tokens.refresh_token? loggedInUser.refreshToken = tokens.refresh_token : '';
+	    			oauth2Client? loggedInUser.authClient = oauth2Client : '';
+
+	      			break;
+	      		case 'drive':
+	      			var filesObj = results.items;
+	      			for (var i in filesObj){
+	      				var fileObj = filesObj[i];
+	      				files.push(new File({
+	      					type : fileObj.kind,
+							id : fileObj.id,
+							etag : fileObj.etag,
+							selfLink : fileObj.selfLink,
+							alternateLink : fileObj.alternateLink,
+							embedLink : fileObj.embedLink,
+							iconLink : fileObj.iconLink,
+							title : fileObj.title,
+							mimeType : fileObj.mimeType,
+							createdDate : fileObj.createdDate,
+							modifiedDate : fileObj.modifiedDate,
+							modifiedByMeDate : fileObj.modifiedByMeDate,
+							lastViewedByMeDate : fileObj.lastViewedByMeDate,
+							parents : fileObj.parents,
+							exportLinks : fileObj.exportLinks,
+							userPermission : fileObj.userPermission,
+							ownerNames : fileObj.ownerNames,
+							owners : fileObj.owners,
+							lastModifyingUserName : fileObj.lastModifyingUserName,
+							lastModifyingUser : fileObj.lastModifyingUser,
+							editable : fileObj.editable,
+							copyable : fileObj.copyable,
+							shared : fileObj.shared
+	      				}));
+	      			}
+	      			break;
+	      		default:
+	      			break;
+	      	}
+	      	returnCounter++;
+
+	      	if (returnCounter == 2){//assign to the user the files at the end of the second callback
+	      		loggedInUser.files = files;
+	      		req.session.user = loggedInUser; //set the session to that of this user
+	      		res.render('mydrive.ejs',{
+	      			user:loggedInUser,
+	      			files:files
+	      		});
+	      	}
 	      }
-
-	      var loggedInUser = new User({
-	      	id: results.id,
-	      	etag: results.etag,
-	      	gender: results.gender,
-	      	googleURL: results.url,
-	      	displayName: results.displayName,
-	      	name: results.name,
-	      	image: results.image,
-	      	email: results.emails[0].value? results.emails[0].value : 'no email',
-	      	lastVisit: new Date()
-	      });
-	      uController.processLogin(loggedInUser,function(action,isSuccess,result){
-	      	console.log('User logged in: Process Login via DAO' + action + ' > ' + isSuccess);
-	      	//req.session.user = loggedInUser; //set the session to that of this user
-	      	res.send('User logged in: Process Login via DAO' + action + ' > ' + isSuccess);
-	      });
+	      
 	    });
-
-		//gSvcs.loginCallback(code,res);
 	});
 
 exports.index = main_router;

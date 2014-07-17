@@ -8,6 +8,9 @@ function User(options){
 	this.image = options.image,
 	this.email = options.email,
 
+	this.refreshToken = options.refreshToken,
+	this.authClient = options.authClient,
+
 	this.lastAttemptedLesson = options.lastLessonID,
 	this.lastVisit = options.lastVisit ? options.lastVisit: new Date();
 }
@@ -44,6 +47,14 @@ User.prototype.getImage = function(){
 
 User.prototype.getEmail = function(){
 	return this.email;
+}
+
+User.prototype.getRefreshToken = function(){
+	return this.refreshToken;
+}
+
+User.prototype.getAuthClient = function(){
+	return this.authClient;
 }
 
 User.prototype.getLastLesson = function(){

@@ -41,7 +41,7 @@
     "pg.js": "3.3.0",
     "googleapis": "0.8.0",
     "request": "2.36.0",
-    "connect-pg-simple":"2.0.0"
+    "connect-pg-simple": "2.0.0"
   },
   "devDependencies": {
     "after": "^0.8.1",
@@ -55,6 +55,7 @@
     "mocha": "^1.20.1",
     "passport": "^0.2.0",
     "passport-google": "^0.3.0",
+    "prettyjson": "^1.0.0",
     "superagent": "^0.18.1"
   },
   "bundleDependencies": []
