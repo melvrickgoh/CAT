@@ -61,7 +61,10 @@ main_router.route('/login')
 
 main_router.route('/mydrive')
 	.all(function(req,res){
-		res.render('mydrive.ejs');
+		_restrict(req,res,function(user){
+			//var data = req.flash('user');
+			res.render('mydrive.ejs',user);
+		},'mydrive');
 	});
 
 // Google will redirect the user to this URL after authentication.  Finish
@@ -176,10 +179,22 @@ main_router.route('/google/oauth2callback')
 	      	if (returnCounter == 2){//assign to the user the files at the end of the second callback
 	      		loggedInUser.files = files;
 	      		req.session.user = loggedInUser; //set the session to that of this user
-	      		res.render('mydrive.ejs',{
-	      			user:loggedInUser,
-	      			files:files
-	      		});
+	      		req.flash('user',loggedInUser);
+	      		var targetRedirect = req.flash('target_locale');
+	      		switch(targetRedirect){
+	      			case 'mydrive':
+	      				console.log('my drive called');
+	      				/*console.log({
+			      			user:loggedInUser,
+			      			files:files
+			      		});*/
+						req.flash('target_locale',undefined);//reset given that user has alr logged in
+	      				res.redirect('/mydrive');
+	      				break;
+	      			default:
+	      				console.log('default flow called');
+	      				res.redirect('/mydrive');
+	      		}
 	      	}
 	      }
 	      
@@ -198,11 +213,12 @@ function _hello(req, res){
 	res.render('index.ejs');
 };
 
-function _restrict(req, res, next) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-  if (req.session.user) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-    next();                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+function _restrict(req, res, next, targetLocale) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+  if (req.session.user) {
+    next(req.session.user);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
   } else {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-    req.session.error = 'Access denied!';                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-    res.redirect('/login');                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+    req.session.error = 'Access denied!';  
+    req.flash('target_locale',targetLocale);
+    res.redirect('/login-google');                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
   }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
 }

@@ -46,6 +46,7 @@
   "devDependencies": {
     "after": "^0.8.1",
     "async": "^0.9.0",
+    "connect-flash": "^0.1.1",
     "expect.js": "^0.3.1",
     "gapitoken": "^0.1.3",
     "grunt": "^0.4.5",

@@ -15,6 +15,7 @@ cookieParser = require('cookie-parser'),
 pg = require('pg.js'),
 session = require('express-session'),
 pgSession = require('connect-pg-simple')(session),
+flash = require('connect-flash'),//allowing the flashing 
 
 errorHandler = require('errorhandler'),
 pgDAO = require('./server/dao/index');
@@ -62,6 +63,8 @@ app.use(session({
   secret: process.env.FOO_COOKIE_SECRET || 'usHCpy7ndmuYy1cF3td7ytBV',//HMAC implementation for certifying modifications to the session's values
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
 }));
+//flash middleware for helping to route data between requests through the flash object
+app.use(flash());
 /*var sess = {
 	secret: 'keyboard cat',
 	cookie: {}//below action for dev and production sets secure cookies to true
