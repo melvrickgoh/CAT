@@ -6,6 +6,7 @@ var BootstrapManager = require('./dao/BootstrapManager'),
 User = require('./entity/user'),
 File = require('./entity/file'),
 UserController = require('./controller/UserController'),
+FileController = require('./controller/FileController'),
 GoogleServices = require('./services/GoogleServices'),
 express = require('express'),
 main_router = express.Router();
@@ -47,7 +48,8 @@ var prettyjson = require('prettyjson');
 */
 
 var bootstrapper = new BootstrapManager(),
-uController = new UserController();
+uController = new UserController(),
+fController = new FileController({});
 
 main_router.route('/')
 	.all(function(req,res){
@@ -59,12 +61,45 @@ main_router.route('/login')
 		res.render('login.ejs');
 	});
 
+//profile route for something like /lawshengxun/profile or /kyong/profile
+main_router.route('/:user_id/profile')
+	.all(function(req,res){
+		var user_id = req.params.user_id;
+		//do something with the custom user id and their profile
+		_restrict(req,res,function(user){
+			//var data = req.flash('user');
+			res.render('profile.ejs',user);
+		},'profile');
+	});
+
 main_router.route('/mydrive')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
 			//var data = req.flash('user');
 			res.render('mydrive.ejs',user);
 		},'mydrive');
+	});
+
+main_router.route('/lessons')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			gSvcs = new GoogleServices();
+			//var data = req.flash('user');
+			var errCallback = function(errMessage,errObject){
+				console.log(errMessage);
+				res.render('error.ejs',errMessage);
+				//res.send(errObject);
+			}
+			var successCallback = function(files,tokens){
+				fController.loadInFiles(files,function(processedFiles){
+					console.log(processedFiles);
+					res.render('lessons.ejs',{files:processedFiles});
+				});
+				
+				//res.send(JSON.stringify(files) + ' ' + JSON.stringify(tokens));
+			}
+			gSvcs.listServiceAccountFiles(successCallback,errCallback);
+		},'lessons');
 	});
 
 // Google will redirect the user to this URL after authentication.  Finish
@@ -180,7 +215,7 @@ main_router.route('/google/oauth2callback')
 	      		loggedInUser.files = files;
 	      		req.session.user = loggedInUser; //set the session to that of this user
 	      		req.flash('user',loggedInUser);
-	      		var targetRedirect = req.flash('target_locale');
+	      		var targetRedirect = req.flash('target_locale')[0];//use only the first element as the result
 	      		switch(targetRedirect){
 	      			case 'mydrive':
 	      				console.log('my drive called');
@@ -191,9 +226,14 @@ main_router.route('/google/oauth2callback')
 						req.flash('target_locale',undefined);//reset given that user has alr logged in
 	      				res.redirect('/mydrive');
 	      				break;
+	      			case 'lessons':
+	      				console.log('lessons called');
+	      				req.flash('target_locale',undefined);//reset given that you've logged in already
+	      				res.redirect('/lessons');
+	      				break;
 	      			default:
 	      				console.log('default flow called');
-	      				res.redirect('/mydrive');
+	      				res.redirect('/home');
 	      		}
 	      	}
 	      }
@@ -217,8 +257,10 @@ function _restrict(req, res, next, targetLocale) {
   if (req.session.user) {
     next(req.session.user);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
   } else {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-    req.session.error = 'Access denied!';  
+    req.session.error = 'Access denied!';
     req.flash('target_locale',targetLocale);
+    console.log(targetLocale);
     res.redirect('/login-google');                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
   }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-}
+}//http://getbootstrap.com/components/#navbar
+//http://www.tutorialspoint.com/bootstrap/bootstrap_navbar.htm

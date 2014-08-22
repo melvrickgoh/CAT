@@ -18,7 +18,8 @@ pgSession = require('connect-pg-simple')(session),
 flash = require('connect-flash'),//allowing the flashing 
 
 errorHandler = require('errorhandler'),
-pgDAO = require('./server/dao/index');
+pgDAO = require('./server/dao/index'),
+bootstrap = require('./server/dao/BootstrapManager');
 
 /**
  * Internal dependencies.

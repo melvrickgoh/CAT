@@ -6,6 +6,10 @@ function File(options){
 	this.alternateLink = options.alternateLink,
 	this.embedLink = options.embedLink,
 	this.iconLink = options.iconLink,
+	this.lesson = options.lesson,//file controller: modified and added after validation processing
+	this.lessonDetails = options.lessonDetails//file controller: taken from vbackend db	
+	this.exercise = options.exercise,//file controller: modified and added after validation processing
+	this.exerciseTitle = options.exerciseTitle,//file controller: modified and added after validation processing
 	this.title = options.title,
 	this.mimeType = options.mimeType,
 	this.createdDate = options.createdDate,
