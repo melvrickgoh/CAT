@@ -801,6 +801,7 @@ Request.prototype.end = function(fn){
     var type = type[0];
     var multipart = 'multipart' == type;
     var redirect = isRedirect(res.statusCode);
+    var parser = self._parser
 
     if (self.piped) {
       res.on('end', function(){
@@ -823,7 +824,7 @@ Request.prototype.end = function(fn){
     if (multipart) buffer = false;
 
     // TODO: make all parsers take callbacks
-    if (multipart) {
+    if (!parser && multipart) {
       var form = new formidable.IncomingForm;
 
       form.parse(res, function(err, fields, files){
@@ -839,7 +840,7 @@ Request.prototype.end = function(fn){
     }
 
     // check for images, one more special treatment
-    if (isImage(mime)) {
+    if (!parser && isImage(mime)) {
       exports.parse.image(res, function(err, obj){
         if (err) return self.callback(err);
         var response = new Response(req, res);
@@ -865,14 +866,19 @@ Request.prototype.end = function(fn){
     if (buffer) parse = parse || exports.parse.text;
 
     // explicit parser
-    if (self._parser) parse = self._parser;
+    if (parser) parse = parser;
 
     // parse
     if (parse) {
-      parse(res, function(err, obj){
-        // TODO: handle error
-        res.body = obj;
-      });
+      try {
+        parse(res, function(err, obj){
+          if (err) self.callback(err);
+          res.body = obj;
+        });
+      } catch(err) {
+        self.callback(err);
+        return;
+      }
     }
 
     // unbuffered
