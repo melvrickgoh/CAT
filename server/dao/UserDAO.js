@@ -22,6 +22,10 @@ UserDAO.prototype.createUserTable = function(){
 				type:'VARCHAR(250)',
 				isCompulsory:true
 			},{
+				name:'emailusername',
+				type:'VARCHAR(150)',
+				isCompulsory:true
+			},{
 				name:'gender',
 				type:'VARCHAR(20)',
 				isCompulsory:true
@@ -54,7 +58,7 @@ UserDAO.prototype.insertNewUsers = function(users,callback){
 	var userExtracts = this.extractUsersDetails(users);
 	var newUserDetails = {
 		name:this.TABLENAME,
-		attributes:[{name:'id',type:'string'},{name:'givenName',type:'string'},
+		attributes:[{name:'id',type:'string'},{name:'givenName',type:'string'},{name:'emailusername',type:'string'},
 			{name:'email',type:'string'},{name:'gender',type:'string'},{name:'lastVisit',type:'BIGINT'},
 			{name:'refreshToken',type:'string'}],
 		values:userExtracts
@@ -72,6 +76,7 @@ UserDAO.prototype.extractUsersDetails = function(users){
 			id:user.id,
 			givenName:user.name.givenName,
 			email:user.email,
+			emailusername:user.emailUsername,
 			gender:user.gender,
 			lastVisit:user.lastVisit.getTime(),
 			refreshToken:user.refreshToken

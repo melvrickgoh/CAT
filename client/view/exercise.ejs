@@ -8,20 +8,12 @@
     <meta name="author" content="Melvrick Goh">
     <link rel="icon" href="../img/favicon.png">
 
-    <title>Lessons</title>
+    <title>Exercise Title</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../stylesheets/simple-sidebar.css" rel="stylesheet">
 
-    <link href="../stylesheets/lessons.css" rel="stylesheet">
-    <!-- Custom styles for this template -->
-    <!--link href="../stylesheets/dashboard.css" rel="stylesheet"-->
-
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
   </head>
 
   <body>
@@ -78,55 +70,45 @@
      </div>
   </nav>
 
-  <div class="container container-xs-height">
-        <div class="row row-xs-height">
-            <% if (lessonKeys.length >= 1) { %>
-             <% 
-              lessonKeys.forEach(function(key){ 
-                  var exercises = files[key], //exercises is a subset of a lesson in terms of representation
-                  exerciseKeys = Object.keys(exercises);
-                    var exercise = exercises[exerciseKeys[0]],
-                    lessonDes = exercise.lessonDetails,
-                    objective = lessonDes.objective;                  
-                %>
-                  <div class="col-sm-6 col-md-5 col-lg-4">
-                    <div class="panel panel-default">
-                       <div class="panel-heading">
-                          <h3 class="panel-title">
-                             Lesson <%=key%>: <%=lessonDes.topic%>
-                          </h3>
-                       </div>
-                       <div class="panel-body col-xs-height">
-                          <ul>
-                            <%   
-                              var objList = objective.split('<xx>');
-                              for(var k in objList){
-                                %><li><%=objList[k]%></li><%
-                              }
-                              if (exerciseKeys.length >= 1){%>
-                                <li><a data-toggle="collapse" data-parent="#accordion" href="#collapse<%=key%>">Exercises</a></li>
-                                <ul id="collapse<%=key%>" class="panel-collapse collapse in">
-                              <%exerciseKeys.forEach(function(key){
-                                var validateExerciseTitle = function(exerciseTitle){
-                                  var urlPattern = exerciseTitle.replace(/\s+/g, '');
-                                  return urlPattern;
-                                },
-                                exercise = exercises[key];
-                                %>
-                                <li>
-                                  <a href="/lessons/<%=validateExerciseTitle(exercise.exerciseTitle)%>/<%=user.emailUsername%>"><%=exercise.exerciseTitle%></a>
-                                </li>
-                                <% }); %>
-                              </ul>
-                              <%}%>
-                          </ul>
-                       </div>
-                    </div>
-                  </div>
-            <% }); %>
-           <% } %>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-3 col-md-2 sidebar">
+        <ul class="nav nav-sidebar">
+          <li class="active"><a href="#">Overview</a></li>
+          <li><a href="#">Reports</a></li>
+          <li><a href="#">Analytics</a></li>
+          <li><a href="#">Export</a></li>
+        </ul>
+        <ul class="nav nav-sidebar">
+          <li><a href="">Nav item</a></li>
+          <li><a href="">Nav item again</a></li>
+          <li><a href="">One more nav</a></li>
+          <li><a href="">Another nav item</a></li>
+          <li><a href="">More navigation</a></li>
+        </ul>
+        <ul class="nav nav-sidebar">
+          <li><a href="">Nav item again</a></li>
+          <li><a href="">One more nav</a></li>
+          <li><a href="">Another nav item</a></li>
+        </ul>
+      </div>
+
+      <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <h1 class="page-header">Achilles </h1>
+
+        <div class="container googledocs">
+          <div class="googledocs jumbotron">
+            
+            <iframe id="googledocs" style="width:700px;height:600px"src="https://docs.google.com/spreadsheets/d/1kX8GtjxvSt9A96tYnPC9CaCZvDeoca2izKP0WE9tdpI/edit?usp=sharing"></iframe>
+          </div>
         </div>
+
+        <h2 class="sub-header">Section title</h2>
+
+      </div>
+
     </div>
+  </div>
 
     <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -134,21 +116,19 @@
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="http://code.jquery.com/jquery-2.1.0.min.js"/>
     <script type="text/javascript">
-      console.log($('.resize').height());
-      $('.resize').css({
-        'height':$('.resize').height()
-      });
-
-      function clickGLink(e){console.log(e)}
-
       function loadDocument(fileLink){
         var documentFrame = document.getElementById('googledocs');
         documentFrame.src = fileLink;
       }
+
+      $("#menu-toggle").click(function(e) {
+        e.preventDefault();
+        $("#wrapper").toggleClass("toggled");
+      });
     </script>
-    <script src="../js/ie10-viewport-bug-workaround.js"></script>
+    <script src="../../js/ie10-viewport-bug-workaround.js"></script>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="../bootstrap/js/bootstrap.min.js"></script>
+    <script src="../../bootstrap/js/bootstrap.min.js"></script>
   </body>
 </html>

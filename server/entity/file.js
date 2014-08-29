@@ -1,6 +1,7 @@
 function File(options){
 	this.type = options.type,
 	this.id = options.id,
+	this.urlPattern = options.urlPattern,
 	this.etag = options.etag,
 	this.selfLink = options.selfLink,
 	this.alternateLink = options.alternateLink,

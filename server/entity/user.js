@@ -7,6 +7,7 @@ function User(options){
 	this.name = options.name,
 	this.image = options.image,
 	this.email = options.email,
+	this.emailUsername = options.emailUsername,
 
 	this.refreshToken = options.refreshToken,
 	this.authClient = options.authClient,

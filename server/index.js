@@ -17,7 +17,7 @@ var googleapis = require('./lib/googleapis');
 var OAuth2Client = googleapis.OAuth2Client;
 var CLIENT_ID = '614118273237-nogtgnp2dm5u9ruisbgq4tu579nq8800.apps.googleusercontent.com';
 var CLIENT_SECRET = 'usHCpy7ndmuYy1cF3td7ytBV';
-var REDIRECT_URL = 'http://cat-melvrickgoh.rhcloud.com/oauth2callback';
+var REDIRECT_URL = 'http://localhost:3003/oauth2callback';
 
 /*var passport = require('passport')
   , GoogleStrategy = require('passport-google').Strategy;
@@ -80,6 +80,19 @@ main_router.route('/mydrive')
 		},'mydrive');
 	});
 
+main_router.route('/lessons/:lessonname/:user_id')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			var userID = req.params.user_id,
+			lessonname = req.params.lessonname;
+
+			console.log(userID);
+			console.log(lessonname);
+
+			res.render('exercise.ejs',user);
+		},'exercise');
+	});
+
 main_router.route('/lessons')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
@@ -92,8 +105,7 @@ main_router.route('/lessons')
 			}
 			var successCallback = function(files,tokens){
 				fController.loadInFiles(files,function(processedFiles){
-					console.log(processedFiles);
-					res.render('lessons.ejs',{files:processedFiles});
+					res.render('lessons.ejs',{files:processedFiles,user:user});
 				});
 				
 				//res.send(JSON.stringify(files) + ' ' + JSON.stringify(tokens));
@@ -169,6 +181,7 @@ main_router.route('/google/oauth2callback')
 			      	loggedInUser.name = results.name,
 			      	loggedInUser.image = results.image,
 			      	loggedInUser.email = results.emails[0].value? results.emails[0].value : 'no email',
+			      	loggedInUser.emailUsername = _extractEmailUsername(results.emails[0].value),
 			      	loggedInUser.lastVisit = new Date();
 
 			      	tokens.refresh_token? loggedInUser.refreshToken = tokens.refresh_token : '';
@@ -216,6 +229,23 @@ main_router.route('/google/oauth2callback')
 	      		req.session.user = loggedInUser; //set the session to that of this user
 	      		req.flash('user',loggedInUser);
 	      		var targetRedirect = req.flash('target_locale')[0];//use only the first element as the result
+	      		console.log(targetRedirect);
+
+	      		//update user database on user details
+	      		uController.processLogin(loggedInUser,function(action,isSuccess,result){
+	      			//action performed
+	      			console.log(action);
+	      			switch(action){
+	      				case 'Update User':
+	      					console.log(result);
+	      					break;
+	      				case 'Insert User':
+	      					console.log(result);
+	      					break;
+	      				default:
+	      			}
+	      		});
+
 	      		switch(targetRedirect){
 	      			case 'mydrive':
 	      				console.log('my drive called');
@@ -252,6 +282,18 @@ function _hello(req, res){
 	mel.logAttributes();
 	res.render('index.ejs');
 };
+
+function _extractEmailUsername(str){
+	var nameMatch = str.match(/^([^@]*)@/),
+	name = nameMatch ? nameMatch[1] : null;
+	console.log(str.indexOf('@gtempaccount.com'));
+	if (str.indexOf('@gtempaccount.com')!=-1){
+		var tempUsername = name.split('@gtempaccount.com')[0];
+		var subTempUsername = tempUsername.split('%')[0];
+		return subTempUsername;
+	}
+	return name;
+}
 
 function _restrict(req, res, next, targetLocale) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
   if (req.session.user) {

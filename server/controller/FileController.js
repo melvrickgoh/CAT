@@ -26,6 +26,7 @@ FileController.prototype.loadInFiles = function(jsonFileList,callback){
 			file.lesson = parseInt(validatedFileRes.lesson);
 			file.exercise = parseInt(validatedFileRes.exercise);
 			file.exerciseTitle = validatedFileRes.title;
+			file.urlPattern = this.validateURLPattern(file);
 
 			//getting lesson details from pgDB
 			asyncOngoing = true;
@@ -68,6 +69,21 @@ FileController.prototype.validateFileTitle = function(title){
 		//perform categorization structuring
 		return {result:true,lesson:result[2],exercise:result[4],title:result[6]};
 	}
+}
+
+FileController.prototype.validateURLPattern = function(file){
+	var exerciseTitle = file.exerciseTitle,
+	urlPattern = exerciseTitle.replace(/\s+/g, '');
+	courseDAO.checkExerciseExistsURL(exerciseTitle,function(exists){
+		if (!exists){
+			file.urlPattern = urlPattern;
+			courseDAO.insertNewExercises([file],function(isSuccess,result){
+				//console.log(isSuccess);
+				//console.log(result);
+			});
+		}
+	});
+	return urlPattern
 }
 
 module.exports = FileController;
