@@ -112,6 +112,21 @@
                                   return urlPattern;
                                 },
                                 exercise = exercises[key];
+
+                                if (!user.emailUsername){
+                                  var extractionPattern = function (str){
+                                    var nameMatch = str.match(/^([^@]*)@/),
+                                    name = nameMatch ? nameMatch[1] : null;
+                                    console.log(str.indexOf('@gtempaccount.com'));
+                                    if (str.indexOf('@gtempaccount.com')!=-1){
+                                      var tempUsername = name.split('@gtempaccount.com')[0];
+                                      var subTempUsername = tempUsername.split('%')[0];
+                                      return subTempUsername;
+                                    }
+                                    return name;
+                                  }
+                                  user.emailUsername = extractionPattern(user.email);
+                                }
                                 %>
                                 <li>
                                   <a href="/lessons/<%=validateExerciseTitle(exercise.exerciseTitle)%>/<%=user.emailUsername%>"><%=exercise.exerciseTitle%></a>

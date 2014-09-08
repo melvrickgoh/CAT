@@ -80,16 +80,79 @@ main_router.route('/mydrive')
 		},'mydrive');
 	});
 
-main_router.route('/lessons/:lessonname/:user_id')
+main_router.route('/lessons/:lessonname/:user_id/:create?')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
 			var userID = req.params.user_id,
-			lessonname = req.params.lessonname;
+			lessonname = req.params.lessonname,
+			isCreate = req.params.create;
 
-			console.log(userID);
-			console.log(lessonname);
+			var validateExerciseTitle = function(exerciseTitle){
+          		return exerciseTitle.replace(/\s+/g, '');
+        	},
+			captureFile = function(sysFiles,fileurl){
+				var lessonKeys = Object.keys(sysFiles);
+				for (var i = 0; i<lessonKeys.length; i++){
+					var lessonKey = lessonKeys[i],
+					lesson = sysFiles[lessonKey],
+					exerciseKeys = Object.keys(lesson);
 
-			res.render('exercise.ejs',user);
+                	for (var j = 0; j<exerciseKeys.length; j++){
+                		var exerciseKey = exerciseKeys[j],
+                		exercise = lesson[exerciseKey],
+						exerciseTitle = exercise.exerciseTitle,
+						exerciseURLPattern = validateExerciseTitle(exerciseTitle);
+
+						if (exerciseURLPattern==lessonname){
+							return {lesson:lesson,exercise:exercise};
+						}
+                	}
+				}
+				return null;
+			},
+			captureAndRenderExercises = function(systemFiles){
+				var wantedFile = captureFile(systemFiles,lessonname);
+				if (wantedFile==null){
+					console.log('cannot find wanted file');
+					res.render('error.ejs','404 file not found');
+				}else{
+					user.targettedExercise = wantedFile.exercise;
+					user.targettedLesson = wantedFile.lesson;
+				}
+				res.render('exercise.ejs',user);
+			};
+
+			if (isCreate && isCreate=='create'){
+				//creation WS call
+				var systemFiles = user.systemFiles,
+				userFiles = user.files;
+
+				var wantedFile = captureFile(systemFiles,lessonname);
+
+
+			}else{
+				//display call
+				if (user.systemFiles){
+					var systemFiles = user.systemFiles;
+					captureAndRenderExercises(systemFiles);
+				}else{
+					gSvcs = new GoogleServices();
+					var errCallback = function(errMessage,errObject){
+						console.log(errMessage);
+						res.render('error.ejs',errMessage);
+					}
+					var successCallback = function(files,tokens){
+						fController.loadInFiles(files,function(processedFiles){
+							user.systemFiles = processedFiles;
+							captureAndRenderExercises(processedFiles);
+						});
+					}
+					gSvcs.listServiceAccountFiles(successCallback,errCallback);
+				}
+				console.log(user.id);
+				console.log(userID);
+				console.log(lessonname);
+			}
 		},'exercise');
 	});
 
@@ -105,6 +168,7 @@ main_router.route('/lessons')
 			}
 			var successCallback = function(files,tokens){
 				fController.loadInFiles(files,function(processedFiles){
+					user.systemFiles = processedFiles;
 					res.render('lessons.ejs',{files:processedFiles,user:user});
 				});
 				
