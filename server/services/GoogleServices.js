@@ -287,7 +287,34 @@ GoogleServices.prototype.removeServiceFilePermissions = function(fileid,successC
 	_serviceAccountExecution(authClientCallback);
 }
 
-
+function _addPermissionsToFile(fileID,userID,email){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    errorCallback('Error authorizing account in authClient (Service account)',err);
+	    return;
+	  }
+	  // Successfully authorize account
+	  // Make an authorized request to list Drive files.
+	  client.drive.permissions.insert({
+	  	fileId:fileID,
+	  	resource:{
+	  		{
+			    id:userID,
+			    value: email,
+			    type: 'user',
+			    role: 'writer'
+			}
+	  	}
+	  }).withAuthClient(authClient).execute(function(err,response) {
+	  		if (err){
+	  			errorCallback(err);
+	  		}else{
+	  			successCallback(response);
+	  		}
+		});
+	}
+	_serviceAccountExecution(authClientCallback);
+}
 
 function _getServicePermissions(fileID,errorCallback,successCallback){
 	var authClientCallback = function(err, tokens, client, authClient) {
