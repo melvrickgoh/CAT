@@ -12,7 +12,8 @@ var OAuth2 = googleapis.auth.OAuth2;
 
 var SERVICE_ACCOUNT_EMAIL = '614118273237-o9khb1d1dqlj54f36jp5nsvjnehvd7i6@developer.gserviceaccount.com';
 var SERVICE_ACCOUNT_KEY_FILE = './server/8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.pem';
-
+//8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.p12
+//8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.cer
 //var passport = require('passport')
 //  , GoogleStrategy = require('passport-google').Strategy;
 
@@ -100,8 +101,60 @@ GoogleServices.prototype.getDriveProfile = function(code,callback){
 GoogleServices.prototype.getUserAndDriveProfile = function(code,callback){
 	getAccessToken(code,function(oauth2Client,tokens){
 	  	_executeCommand(oauth2Client,function(client,oauth2Client){
-	  		_getUserProfile(client,oauth2Client,'me',function(err,results){callback('profile',err,results,tokens,oauth2Client);});
-	  		_getDriveProfile(client,oauth2Client,'me',function(err,results){callback('drive',err,results,tokens,oauth2Client);});
+	  		//var userName;
+	  		_getUserProfile(client,oauth2Client,'me',function(err,results){
+	  			//userEmail = results.name;
+	  			callback('profile',err,results,tokens,oauth2Client);});
+	  		_getDriveProfile(client,oauth2Client,'me',function(err,results){
+
+	  			callback('drive',err,results,tokens,oauth2Client);
+	  			//return the system files 
+	  			/*var errCallback = function(errMessage,errObject){
+					console.log(errMessage);
+				}
+				var successCallback = function(files,tokens){
+					// compare the drive documents and system documents with their id
+
+					var filesObj = results.items;
+					//clear the results list of client drive.
+	  				results.items.clear();
+					// create a loop for the system drive documents first
+					while (files.hasNext()) {
+  							var file = files.next();
+  							console.log(file);
+  							var systemFileTitle = file.title;
+  							var systemFileId = file.id;
+	  						
+	  						//check that this fileId exist within client's drive	  					
+	      					//do a loop or check for existing id
+	      					/*if (filesObj.getFileById(systemFileId) == null ) {
+
+	      					}
+	      					var counter = 0;
+	      					for (var i in filesObj){
+				      			var fileObj = filesObj[i];
+				      			console.log(fileObj.title);
+								var fileTitle = fileObj.title;
+								if (fileTitle == systemFileTitle) {
+									counter+=1;				
+								}
+							
+							}; 		
+
+							if(counter == 0) {
+								var copiedFile = copyFile(systemFileId,systemFileTitle);
+								results.push(copiedFile);
+							}	
+					};
+
+					
+					// at this level, return spreadsheet that are only the cat's excel sheet. 
+	  				callback('drive',err,results,tokens,oauth2Client);
+				}
+	  			listServiceAccountFiles(successCallback,errorCallback); */
+
+	  			
+	  		
 	  	});
 	});
 }
@@ -125,7 +178,6 @@ function _executeCommand(oauth2Client,callback){
 	   });
 }
 
-
 function getAccessToken(code, callback) {
     var oauth2Client = new OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
     // request access token
@@ -143,6 +195,25 @@ function getAccessToken(code, callback) {
  	});
 }
 
+/**
+ * Copy an existing file.
+ *
+ * @param {String} originFileId ID of the origin file to copy.
+ * @param {String} copyTitle Title of the copy.
+ */
+function copyFile(originFileId, copyTitle) {
+  var body = {'title': copyTitle};
+  var request = gapi.client.drive.files.copy({
+    'fileId': originFileId,
+    'resource': body
+  });
+  request.execute(function(resp) {
+    console.log('Copy ID: ' + resp.id);
+    return resp;
+  });
+}
+
+//function compare()
 
 /*
 * Application Drive is accessed via this method
@@ -177,6 +248,8 @@ GoogleServices.prototype.listServiceAccountFiles = function(successCallback,erro
 					    errorCallback('Error accessing files with authClient (Service Account)',err);
 					    return;
 					}
+					console.log("HI")
+					console.log(files);
 
 			  		successCallback(files,tokens);
 				});
@@ -184,5 +257,8 @@ GoogleServices.prototype.listServiceAccountFiles = function(successCallback,erro
 
 		});
 }
+
+
+
 
 module.exports = GoogleServices;
