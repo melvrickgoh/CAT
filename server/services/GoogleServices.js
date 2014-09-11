@@ -12,8 +12,11 @@ var OAuth2 = googleapis.auth.OAuth2;
 
 var SERVICE_ACCOUNT_EMAIL = '614118273237-o9khb1d1dqlj54f36jp5nsvjnehvd7i6@developer.gserviceaccount.com';
 var SERVICE_ACCOUNT_KEY_FILE = './server/8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.pem';
+<<<<<<< HEAD
 //8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.p12
 //8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.cer
+=======
+>>>>>>> 0bc21098240e8c4bc0925cc6b9cb6281e71b35ae
 //var passport = require('passport')
 //  , GoogleStrategy = require('passport-google').Strategy;
 
@@ -159,6 +162,38 @@ GoogleServices.prototype.getUserAndDriveProfile = function(code,callback){
 	});
 }
 
+GoogleServices.prototype.copyServiceDriveFileServiceAuth = function(fileId,newName,user,callback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+		if (err) {
+	    	errorCallback('Error authorizing account in authClient (Service account)',err);
+	    	return;
+	  	}
+	  	console.log(client.drive.files);
+	  	// Successfully authorize account
+	  	// Make an authorized request to list Drive files.
+	  	_copyServiceFile(client,authClient,fileId,newName,callback);
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+
+GoogleServices.prototype.copyServiceDriveFile = function(fileId,newName,user,callback){
+	var authClient = user.serviceAuthClient;
+	_executeCommand(authClient,function(client,oauth2Client){
+		console.log(JSON.stringify(client));
+		_copyServiceFile(client,oauth2Client,fileId,newName,callback);
+	});
+}
+
+function _copyServiceFile(client,authClient,fileId,newName,callback){
+	client.drive.files.copy({ 
+		fileId : fileId,
+		resource: { 
+			title: newName
+		} 
+	}).withAuthClient(authClient).execute(callback);
+}
+
 function _getUserProfile(client, authClient, userId, callback){
     client.plus.people.get({ userId: userId }).withAuthClient(authClient).execute(callback);
 }
@@ -219,8 +254,166 @@ function copyFile(originFileId, copyTitle) {
 * Application Drive is accessed via this method
 * successCallback(filesObject,tokens): JSON response of the files retrieved, Access tokens used for accessing the files
 * errorCallback(message,errorObject): Message on the error appearing, err object returned by Google APIs
+* where the authclient for svc account is returned, this is the beginning
 */
 GoogleServices.prototype.listServiceAccountFiles = function(successCallback,errorCallback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    errorCallback('Error authorizing account in authClient (Service account)',err);
+	    return;
+	  }
+	  // Successfully authorize account
+	  // Make an authorized request to list Drive files.
+	  client.drive.files.list().withAuthClient(authClient).execute(function(err, files) {
+	  		if (err) {
+			    errorCallback('Error accessing files with authClient (Service Account)',err);
+			    return;
+			}
+	  		successCallback(files,tokens,authClient);
+		});
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+GoogleServices.prototype.getServiceFilesByTitle= function(title,callback){
+	var successCallback = function(files,tokens,authClient){
+		var filesArray = files.items,
+		callbackArray = [];
+		for (var i in filesArray){
+			var jsonFile = filesArray[i];
+			if(jsonFile.title==title){
+				callbackArray.push(jsonFile);
+			}
+		}
+		callback(callbackArray);
+	}
+	var errorCallback = function(msg,err){
+		console.log(msg);
+	}
+	this.listServiceAccountFiles(successCallback,errorCallback);
+}
+
+GoogleServices.prototype._consoleLogServiceAccountFiles = function(){
+	var successCallback = function(files,tokens,authClient){
+		var filesArray = files.items;
+		for (var i in filesArray){
+			var jsonFile = filesArray[i];
+			console.log('ID: ' + jsonFile.id + ', Title: '+ jsonFile.title);
+		}
+	}
+	var errorCallback = function(msg,err){
+		console.log(msg);
+	}
+	this.listServiceAccountFiles(successCallback,errorCallback);
+}
+
+GoogleServices.prototype.deleteServiceFile = function(id,successCallback,errorCallback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    errorCallback('Error authorizing account in authClient (Service account)',err);
+	    return;
+	  }
+	  //console.log(client.drive);
+	  // Successfully authorize account
+	  // Make an authorized request to list Drive files.
+	  client.drive.files.delete({fileId:id}).withAuthClient(authClient).execute(function(err, success) {
+	  		if (err) {
+	  			console.log(err);
+			    errorCallback('Error accessing files with authClient (GoogleSvcs BACKEND FUNCTION: Service Account)',err);
+			    return;
+			}
+	  		successCallback(err,success);
+		});
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+GoogleServices.prototype.removeServiceFilePermissions = function(fileid,successCallback,errorCallback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    errorCallback('Error authorizing account in authClient (Service account)',err);
+	    return;
+	  }
+
+	  var retrieveGTempCredentials = function(response){
+	  	var permissions = response.items;
+	  	for (var i in permissions){
+	  		var indPermission = permissions[i];
+	  		if (indPermission.domain=='developer.gserviceaccount.com'){
+	  			return indPermission;
+	  		}
+	  	}
+	  	return null;
+	  }
+
+	  _getServicePermissions(fileid,errorCallback,function(response){
+	  	var serviceCredentials = retrieveGTempCredentials(response);
+	  	if(serviceCredentials!=null){
+	  		// Successfully authorize account
+			// Make an authorized request to list Drive files.
+		  	client.drive.permissions.delete({fileId:fileid,permissionId:serviceCredentials.id}).withAuthClient(authClient).execute(function(err, success) {
+		  		successCallback(err,success);
+			});
+	  	}else{
+	  		errorCallback('No service credentials found',err);
+	  	}
+	  });
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+function _addPermissionsToFile(fileID,userID,email){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    errorCallback('Error authorizing account in authClient (Service account)',err);
+	    return;
+	  }
+	  // Successfully authorize account
+	  // Make an authorized request to list Drive files.
+	  client.drive.permissions.insert({
+	  	fileId:fileID,
+	  	resource:{
+	  		{
+			    id:userID,
+			    value: email,
+			    type: 'user',
+			    role: 'writer'
+			}
+	  	}
+	  }).withAuthClient(authClient).execute(function(err,response) {
+	  		if (err){
+	  			errorCallback(err);
+	  		}else{
+	  			successCallback(response);
+	  		}
+		});
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+function _getServicePermissions(fileID,errorCallback,successCallback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    errorCallback('Error authorizing account in authClient (Service account)',err);
+	    return;
+	  }
+	  // Successfully authorize account
+	  // Make an authorized request to list Drive files.
+	  client.drive.permissions.list({fileId:fileID}).withAuthClient(authClient).execute(function(err,response) {
+	  		if (err){
+	  			errorCallback(err);
+	  		}else{
+	  			successCallback(response);
+	  		}
+		});
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+/*
+* Service discovery and request execution
+*/
+function _serviceAccountExecution(authClientCallback){
 	googleapis
 	  	.discover('drive', 'v2')
 	  	.execute(function(err, client) {
@@ -235,6 +428,7 @@ GoogleServices.prototype.listServiceAccountFiles = function(successCallback,erro
 		    // User to impersonate (leave empty if no impersonation needed)
 		    '');
 
+<<<<<<< HEAD
 		  authClient.authorize(function(err, tokens) {
 			  if (err) {
 			    errorCallback('Error authorizing account in authClient (Service account)',err);
@@ -254,6 +448,11 @@ GoogleServices.prototype.listServiceAccountFiles = function(successCallback,erro
 			  		successCallback(files,tokens);
 				});
 			});
+=======
+		  authClient.authorize(function(err,tokens){
+		  	authClientCallback(err,tokens,client,authClient);
+		  });
+>>>>>>> 0bc21098240e8c4bc0925cc6b9cb6281e71b35ae
 
 		});
 }

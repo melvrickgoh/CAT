@@ -421,7 +421,7 @@ pgDAO.prototype.generateCreateTableQuery = function(details){
 		var attribute = details.attributes[i];
 		query += ' ' + attribute.name + ' ' + attribute.type;
 		if (attribute.isCompulsory){
-			query += ' NOT NULL,'
+			query += ' NOT NULL'
 		}else{
 			i == details.attributes.length-1 ? '' : query += ','
 		}

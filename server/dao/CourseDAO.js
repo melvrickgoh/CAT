@@ -2,9 +2,15 @@ var pgDAO = require('./index');
 var dao = new pgDAO({});
 function CourseDAO(options){
 	this.TABLENAME = 'course',
+	this.EXERCISE_TABLE_NAME = 'exercises',
 	this.lessonMeta = {};
 
 	this.loadLessonDetails();//load in lesson meta for future reference
+
+	/*this.createExerciseTable(function(isSuccess,result){
+		console.log(isSuccess);
+		console.log(result);
+	});//create the exercise table if it doesnt exist*/
 }
 
 CourseDAO.prototype.createCourseTable = function(callback){
@@ -32,7 +38,50 @@ CourseDAO.prototype.createCourseTable = function(callback){
 		setTimeout(function(){
 			dao.checkTableExists(courseDetails.name,function(isSuccess,result){
 				console.log('Course table creation is > ' + isSuccess);
-				callback();
+				callback(isSuccess,result);
+	      	});
+		},2000);
+	});
+}
+
+CourseDAO.prototype.createExerciseTable = function(callback){
+	var exerciseTableDetails = {
+		name:this.EXERCISE_TABLE_NAME,
+		pk:{
+			isGenerated:true,
+			name:'id',
+			type:'INTEGER'
+		},
+		attributes:[
+			{
+				name:'lessonid',
+				type:'VARCHAR(10)',
+				isCompulsory:true
+			},{
+				name:'name',
+				type:'VARCHAR(200)',
+				isCompulsory:true
+			},{
+				name:'url',
+				type:'VARCHAR(200)',
+				isCompulsory:true
+			},{
+				name:'link',
+				type:'VARCHAR(400)',
+				isCompulsory:true
+			},{
+				name:'masterid',
+				type:'VARCHAR(100)',
+				isCompulsory:true
+			}//delimited by a <xx> tag
+		]
+	};
+
+	dao.createTable(exerciseTableDetails,function(isSuccess,result){
+		setTimeout(function(){
+			dao.checkTableExists(exerciseTableDetails.name,function(isSuccess,result){
+				console.log('Exercise table creation is > ' + isSuccess);
+				callback(isSuccess,result);
 	      	});
 		},2000);
 	});
@@ -67,6 +116,21 @@ CourseDAO.prototype.extractCourseDetails = function(courses){
 			lessonid:course.lessonID,
 			topic:course.topic,
 			objective:course.objective
+		});
+	}
+	return extract;
+}
+
+CourseDAO.prototype.extractExerciseDetails = function(exercises){
+	var extract = [];
+	for (var i in exercises){
+		var exercise = exercises[i];
+		extract.push({
+			lessonid : exercise.lesson,
+			name : exercise.exerciseTitle,
+			url : exercise.urlPattern,
+			link : exercise.alternateLink,
+			masterid : exercise.id
 		});
 	}
 	return extract;
@@ -123,6 +187,58 @@ CourseDAO.prototype.loadLessonDetails = function(){
 				var res = result[i];
 				lm[res.lessonid] = {topic:res.topic,objective:res.objective};
 			}
+		}
+	});
+}
+
+CourseDAO.prototype.insertExercise = function(lesson,callback){
+	var insertExerciseDetails = {
+		name:this.EXERCISE_TABLE_NAME,
+		values:[{
+			name:'topic',
+			type:'string',
+			value:lesson.topic
+		},{
+			name:'objective',
+			type:'string',
+			value:lesson.objective
+		}],
+		conditions:['id = \'' + lesson.lessonID + '\'']
+	}
+}
+
+CourseDAO.prototype.checkExerciseExistsURL = function(exercisePattern,callback){
+	var selectExerciseDetails = {
+		name:this.EXERCISE_TABLE_NAME,
+		distinct:false,
+		attributes:['url'],
+		conditions:['url = \''+ exercisePattern +'\'']
+	};
+	dao.select(selectExerciseDetails,function(isSuccess,result){
+		if (result.length >= 1){
+			callback(true);//selected length >= 1
+		}else{
+			callback(false);//selected length is 0 or less
+		}
+	});
+}
+
+CourseDAO.prototype.insertNewExercises = function(exercises,callback){
+	var exerciseExtracts = this.extractExerciseDetails(exercises);
+	var newExerciseDetails = {
+		name:this.EXERCISE_TABLE_NAME,
+		attributes:[{name:'lessonid',type:'string'},
+			{name:'name',type:'string'},
+			{name:'url',type:'string'},
+			{name:'link',type:'string'},
+			{name:'masterid',type:'string'}],
+		values:exerciseExtracts
+	};
+	dao.checkTableExists(this.EXERCISE_TABLE_NAME,function(exists,result){
+		if (exists){
+			dao.insert(newExerciseDetails,function(isSuccess,result){
+				callback(isSuccess,result);
+			});
 		}
 	});
 }

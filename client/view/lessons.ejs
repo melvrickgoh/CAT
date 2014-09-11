@@ -38,37 +38,49 @@
      </div>
      <div class="collapse navbar-collapse" id="example-navbar-collapse">
         <ul class="nav navbar-nav">
-           <li class="active"><a href="/mydrive">My Drive</a></li>
+           <li><a href="/mydrive">My Drive</a></li>
+           <li class="active"><a href="/lessons">Lessons</a></li>
+           <!--
            <li class="dropdown">
               <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                  Lessons<b class="caret"></b>
               </a>
-              <ul class="dropdown-menu">
+              <ul class="dropdown-menu" role="menu">
                  <li><a href="#" onclick="log(<%=files%>)">Course Outline</a></li>
                  <% var lessonKeys = Object.keys(files); %>
-                 <% if (lessonKeys.length > 1) { %>
+                 <% if (lessonKeys.length >= 1) { %>
                    <li class="divider"></li>
-                    <!-- process associative array here-->
                    <% 
                     lessonKeys.forEach(function(key){ 
                         var exercises = files[key], //exercises is a subset of a lesson in terms of representation
                         exerciseKeys = Object.keys(exercises);
                       %>
                       <li>
-                        <a class="dropdown-toggle" data-toggle="dropdown" tabindex="-1" href="#">Lesson <%=key%>
-                        </a>
+                        <a class="dropdown-toggle" data-toggle="dropdown" tabindex="-1" href="#collapseLessonMenu<%=key%>">Lesson <%=key%></a>
+                        <%if(exerciseKeys.length>=1){%>
+                          <ul id="collapseLessonMenu<%=key%>" class="collapse in">
+                            <%exerciseKeys.forEach(function(key){
+                              var exercise = exercises[key];%>
+                              <li>
+                                <a href="linktopage"><%=exercise.exerciseTitle%></a>
+                              </li>
+                            <% }); %>
+                          </ul>
+                        <%}%>
                       </li>
                   <% }); %>
                  <% } %>
               </ul>
            </li>
+            -->
+
         </ul>
      </div>
   </nav>
 
   <div class="container container-xs-height">
         <div class="row row-xs-height">
-            <% if (lessonKeys.length > 1) { %>
+            <% if (lessonKeys.length >= 1) { %>
              <% 
               lessonKeys.forEach(function(key){ 
                   var exercises = files[key], //exercises is a subset of a lesson in terms of representation
@@ -91,7 +103,37 @@
                               for(var k in objList){
                                 %><li><%=objList[k]%></li><%
                               }
-                            %>
+                              if (exerciseKeys.length >= 1){%>
+                                <li><a data-toggle="collapse" data-parent="#accordion" href="#collapse<%=key%>">Exercises</a></li>
+                                <ul id="collapse<%=key%>" class="panel-collapse collapse in">
+                              <%exerciseKeys.forEach(function(key){
+                                var validateExerciseTitle = function(exerciseTitle){
+                                  var urlPattern = exerciseTitle.replace(/\s+/g, '');
+                                  return urlPattern;
+                                },
+                                exercise = exercises[key];
+
+                                if (!user.emailUsername){
+                                  var extractionPattern = function (str){
+                                    var nameMatch = str.match(/^([^@]*)@/),
+                                    name = nameMatch ? nameMatch[1] : null;
+                                    console.log(str.indexOf('@gtempaccount.com'));
+                                    if (str.indexOf('@gtempaccount.com')!=-1){
+                                      var tempUsername = name.split('@gtempaccount.com')[0];
+                                      var subTempUsername = tempUsername.split('%')[0];
+                                      return subTempUsername;
+                                    }
+                                    return name;
+                                  }
+                                  user.emailUsername = extractionPattern(user.email);
+                                }
+                                %>
+                                <li>
+                                  <a href="/lessons/<%=validateExerciseTitle(exercise.exerciseTitle)%>/<%=user.emailUsername%>"><%=exercise.exerciseTitle%></a>
+                                </li>
+                                <% }); %>
+                              </ul>
+                              <%}%>
                           </ul>
                        </div>
                     </div>
@@ -111,10 +153,6 @@
       $('.resize').css({
         'height':$('.resize').height()
       });
-
-      function log(e){
-        console.log(e);
-      }
 
       function clickGLink(e){console.log(e)}
 

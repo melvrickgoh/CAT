@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Melvrick Goh">
+    <link rel="icon" href="../../img/favicon.png">
+
+    <title><%=targettedExercise.exerciseTitle%></title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../../bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../stylesheets/simple-sidebar.css" rel="stylesheet">
+    <link href="../../stylesheets/scroll.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <nav class="navbar navbar-default" style="z-index:1001" role="navigation">
+     <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" 
+           data-target="#example-navbar-collapse">
+           <span class="sr-only">Toggle navigation</span>
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/service">Administrator</a>
+     </div>
+     <div class="collapse navbar-collapse" id="example-navbar-collapse">
+        <ul class="nav navbar-nav">
+           <li><a href="/mydrive">My Drive</a></li>
+           <li class="active"><a href="/lessons">Lessons</a></li>
+        </ul>
+     </div>
+    </nav>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <div id="sidebar-wrapper" style="margin-top:-60px">
+          <ul class="sidebar-nav" style="margin-top:60px">
+              <li class="sidebar-brand">
+                Lesson <%=targettedExercise.lesson%>
+              </li>
+              <% var targettedLessonKeys = Object.keys(targettedLesson);
+                 targettedLessonKeys.forEach(function(exerciseKey){
+                  var exercise = targettedLesson[exerciseKey];
+                  var exerciseName = exercise.exerciseTitle;
+                  if (exercise.exercise == targettedExercise.exercise){%>
+                      <li style="background: rgba(255,255,255,0.2);color: #fff;"><%=exerciseName%></li>
+                    <%}else{%>
+                      <li><a href="#"><%=exerciseName%></a></li>
+                    <%}
+                }); 
+
+                var validateExerciseTitle = function(exerciseTitle){
+                  var urlPattern = exerciseTitle.replace(/\s+/g, '');
+                  return urlPattern;
+                }
+                var sysFilesKeys = Object.keys(systemFiles);
+                sysFilesKeys.forEach(function(lessonKey){
+                  var sysLesson = systemFiles[lessonKey];
+                  var sysLessonExerciseKeys = Object.keys(sysLesson);
+                  if (lessonKey!=targettedExercise.lesson){ %>
+                    <li class="sidebar-brand">
+                      Lesson <%=lessonKey%>
+                    </li>
+                  <% 
+                    sysLessonExerciseKeys.forEach(function(exerciseKey){
+                      var exercise = sysLesson[exerciseKey];
+                      var exerciseName = exercise.exerciseTitle;
+                      console.log('lesson > '+ lessonKey + ' exe > ' + exerciseKey);
+                  %>
+                    <li>
+                      <a href="/lessons/<%=exercise.urlPattern%>/<%=emailUsername%>"><%=exerciseName%></a>
+                    </li>
+                  <%});
+                  }
+               });%>
+          </ul>
+      </div>
+      <!-- /#sidebar-wrapper -->
+
+      <!-- Page Content -->
+      <div id="page-content-wrapper">
+          <div class="container-fluid">
+              <div class="row">
+                  <div class="col-lg-12">
+                      <div class="alert alert-info">
+                        <a href="/lessons/<%=targettedExercise.urlPattern%>/<%=emailUsername%>/create" id="createFile" class="alert-link"><strong>Info!</strong> You currently do not have this exercise. <bold>Click to create!</bold></a>
+                      </div>
+                      <iframe id="googledocs" style="width:100%;height:600px"src="<%=targettedExercise.alternateLink%>"></iframe>
+                      <a href="#menu-toggle" class="btn btn-default hidden-md hidden-lg" id="menu-toggle">Show other files</a>
+                  </div>
+              </div>
+          </div>
+      </div>
+      <!-- /#page-content-wrapper -->
+
+  </div>
+  <!-- /#wrapper -->
+<!--
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-3 col-md-2 sidebar">
+        <ul class="nav nav-sidebar">
+          <li class="active"><a href="#">Overview</a></li>
+          <li><a href="#">Reports</a></li>
+          <li><a href="#">Analytics</a></li>
+          <li><a href="#">Export</a></li>
+        </ul>
+        <ul class="nav nav-sidebar">
+          <li><a href="">Nav item</a></li>
+          <li><a href="">Nav item again</a></li>
+          <li><a href="">One more nav</a></li>
+          <li><a href="">Another nav item</a></li>
+          <li><a href="">More navigation</a></li>
+        </ul>
+        <ul class="nav nav-sidebar">
+          <li><a href="">Nav item again</a></li>
+          <li><a href="">One more nav</a></li>
+          <li><a href="">Another nav item</a></li>
+        </ul>
+      </div>
+
+      <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+        <h1 class="page-header">Achilles </h1>
+
+        <div class="container googledocs">
+          <div class="googledocs jumbotron">
+            
+            <iframe id="googledocs" style="width:700px;height:600px"src="https://docs.google.com/spreadsheets/d/1kX8GtjxvSt9A96tYnPC9CaCZvDeoca2izKP0WE9tdpI/edit?usp=sharing"></iframe>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+-->
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+
+    <script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="../../bootstrap/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+      function loadDocument(fileLink){
+        var documentFrame = document.getElementById('googledocs');
+        documentFrame.src = fileLink;
+      }
+
+      $("#menu-toggle").click(function(e) {
+        console.log('button clicked');
+        e.preventDefault();
+        $("#wrapper").toggleClass("toggled");
+      });
+    </script>
+  </body>
+</html>

@@ -61,6 +61,92 @@ main_router.route('/login')
 		res.render('login.ejs');
 	});
 
+main_router.route('/serviceadmin')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			var errorLogin = req.flash('servicelogin'),
+			errorUsername = req.flash('serviceloginusername');
+			req.flash('servicelogin',undefined);
+			req.flash('serviceloginusername',undefined);
+			res.render('administrator.ejs',{
+				error:errorLogin,
+				errorUsername:errorUsername
+			});
+		},'serviceadmin');
+	});
+
+main_router.route('/serviceadmin/login')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			
+				var username = req.query.username,
+				password = req.query.password;
+
+				if (username == 'liverpool' && password == 'liverpool'){
+					console.log('login success');
+					user.svcAdmin = true;
+					res.redirect('/service');
+				}else{
+					console.log('login failure');
+					req.flash('servicelogin','Invalid login!');
+					req.flash('serviceloginusername',username);
+					res.redirect('/serviceadmin');
+				}
+			
+		},'serviceadmin');
+	});
+
+main_router.route('/service')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			_restrictServiceAdmin(req,res,function(user){
+				gSvcs = new GoogleServices();
+				var errCallback = function(errMessage,errObject){
+					console.log(errMessage);
+					res.render('error.ejs',errMessage);
+				}
+				var successCallback = function(files,tokens,authClient){
+					res.render('administrator-dashboard.ejs',{files:files.items, googleDelete:gSvcs.deleteServiceFile});
+				}
+				gSvcs.listServiceAccountFiles(successCallback,errCallback);
+			},'service');
+		},'service');
+	});
+
+main_router.route('/service/ws/files')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			_restrictServiceAdmin(req,res,function(user){
+				if (req.query.delete){
+					var fileID = req.query.delete;
+					gSvcs = new GoogleServices();
+					var errCallback = function(errMessage,errObject){
+						res.json({error:true,message:errMessage});
+					}
+
+					var successCallback = function(err,success){
+						res.json({error:false,message:success});
+					}
+					gSvcs.deleteServiceFile(fileID,successCallback,errCallback);
+				}else if (req.query.permission){
+					var fileID = req.query.permission;
+					gSvcs = new GoogleServices();
+					var errCallback = function(errMessage,errObject){
+						res.json({error:true,message:errMessage});
+					}
+
+					var successCallback = function(err,success){
+						res.json({error:false,message:success});
+					}
+					gSvcs.removeServiceFilePermissions(fileID,successCallback,errCallback);
+				}else{
+					res.json({error:true,message:'Invalid Web Service Call'});
+				}
+				
+			},'serviceWS');
+		},'serviceWS');
+	});
+
 //profile route for something like /lawshengxun/profile or /kyong/profile
 main_router.route('/:user_id/profile')
 	.all(function(req,res){
@@ -76,8 +162,99 @@ main_router.route('/mydrive')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
 			//var data = req.flash('user');
+			console.log(user.authClient);
+
 			res.render('mydrive.ejs',user);
 		},'mydrive');
+	});
+
+main_router.route('/lessons/:lessonname/:user_id/:create?')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			var userID = req.params.user_id,
+			lessonname = req.params.lessonname,
+			isCreate = req.params.create;
+
+			gSvcs = new GoogleServices();
+
+			var validateExerciseTitle = function(exerciseTitle){
+          		return exerciseTitle.replace(/\s+/g, '');
+        	},
+			captureFile = function(sysFiles,fileurl){
+				var lessonKeys = Object.keys(sysFiles);
+				for (var i = 0; i<lessonKeys.length; i++){
+					var lessonKey = lessonKeys[i],
+					lesson = sysFiles[lessonKey],
+					exerciseKeys = Object.keys(lesson);
+
+                	for (var j = 0; j<exerciseKeys.length; j++){
+                		var exerciseKey = exerciseKeys[j],
+                		exercise = lesson[exerciseKey],
+						exerciseTitle = exercise.exerciseTitle,
+						exerciseURLPattern = validateExerciseTitle(exerciseTitle);
+
+						if (exerciseURLPattern==lessonname){
+							return {lesson:lesson,exercise:exercise};
+						}
+                	}
+				}
+				return null;
+			},
+			captureAndRenderExercises = function(systemFiles){
+				var wantedFile = captureFile(systemFiles,lessonname);
+				if (wantedFile==null){
+					res.render('error.ejs','404 file not found');
+				}else{
+					user.targettedExercise = wantedFile.exercise;
+					user.targettedLesson = wantedFile.lesson;
+				}
+				res.render('exercise.ejs',user);
+			};
+
+			if (isCreate && isCreate=='create'){
+				//creation WS call
+				var systemFiles = user.systemFiles,
+				userFiles = user.files;
+
+				var wantedFile = captureFile(systemFiles,lessonname);
+				if (wantedFile != null){
+					var exercise = wantedFile.exercise;
+					console.log('filecreation');
+
+					gSvcs.copyServiceDriveFileServiceAuth(exercise.id,exercise.title + ' ('+user.emailUsername+')',user,function(err,fileResponse,fileAndHTTPResponse){
+						gSvcs._consoleLogServiceAccountFiles();
+						//console.log(err);
+						//console.log(fileResponse);
+						//console.log(fileAndHTTPResponse);
+					});
+				}else{
+					//errorneous
+				}
+
+			}else{
+				//display call
+				if (user.systemFiles){
+					var systemFiles = user.systemFiles;
+					captureAndRenderExercises(systemFiles);
+				}else{
+					var errCallback = function(errMessage,errObject){
+						console.log(errMessage);
+						res.render('error.ejs',errMessage);
+					}
+					var successCallback = function(files,tokens,authClient){
+						user.serviceAuthClient =authClient;
+						fController.loadInFiles(files,function(processedFiles){
+							user.systemFiles = processedFiles;
+							captureAndRenderExercises(processedFiles);
+						});
+					}
+					gSvcs.listServiceAccountFiles(successCallback,errCallback);
+				}
+				console.log(user.id);
+				console.log(userID);
+				console.log(lessonname);
+			}
+		},'exercise');
 	});
 
 main_router.route('/lessons')
@@ -90,10 +267,11 @@ main_router.route('/lessons')
 				res.render('error.ejs',errMessage);
 				//res.send(errObject);
 			}
-			var successCallback = function(files,tokens){
+			var successCallback = function(files,tokens,authClient){
+				user.serviceAuthClient = authClient;
 				fController.loadInFiles(files,function(processedFiles){
-					console.log(processedFiles);
-					res.render('lessons.ejs',{files:processedFiles});
+					user.systemFiles = processedFiles;
+					res.render('lessons.ejs',{files:processedFiles,user:user});
 				});
 				
 				//res.send(JSON.stringify(files) + ' ' + JSON.stringify(tokens));
@@ -169,6 +347,7 @@ main_router.route('/google/oauth2callback')
 			      	loggedInUser.name = results.name,
 			      	loggedInUser.image = results.image,
 			      	loggedInUser.email = results.emails[0].value? results.emails[0].value : 'no email',
+			      	loggedInUser.emailUsername = _extractEmailUsername(results.emails[0].value),
 			      	loggedInUser.lastVisit = new Date();
 
 			      	tokens.refresh_token? loggedInUser.refreshToken = tokens.refresh_token : '';
@@ -216,6 +395,22 @@ main_router.route('/google/oauth2callback')
 	      		req.session.user = loggedInUser; //set the session to that of this user
 	      		req.flash('user',loggedInUser);
 	      		var targetRedirect = req.flash('target_locale')[0];//use only the first element as the result
+	      		console.log(targetRedirect);
+
+	      		//update user database on user details
+	      		uController.processLogin(loggedInUser,function(action,isSuccess,result){
+	      			//action performed
+	      			switch(action){
+	      				case 'Update User':
+	      					console.log(result);
+	      					break;
+	      				case 'Insert User':
+	      					console.log(result);
+	      					break;
+	      				default:
+	      			}
+	      		});
+
 	      		switch(targetRedirect){
 	      			case 'mydrive':
 	      				console.log('my drive called');
@@ -253,6 +448,17 @@ function _hello(req, res){
 	res.render('index.ejs');
 };
 
+function _extractEmailUsername(str){
+	var nameMatch = str.match(/^([^@]*)@/),
+	name = nameMatch ? nameMatch[1] : null;
+	if (str.indexOf('@gtempaccount.com')!=-1){
+		var tempUsername = name.split('@gtempaccount.com')[0];
+		var subTempUsername = tempUsername.split('%')[0];
+		return subTempUsername;
+	}
+	return name;
+}
+
 function _restrict(req, res, next, targetLocale) {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
   if (req.session.user) {
     next(req.session.user);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
@@ -262,5 +468,21 @@ function _restrict(req, res, next, targetLocale) {
     console.log(targetLocale);
     res.redirect('/login-google');                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
   }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-}//http://getbootstrap.com/components/#navbar
-//http://www.tutorialspoint.com/bootstrap/bootstrap_navbar.htm
+}
+
+function _restrictServiceAdmin(req, res, next, targetServiceLocale){
+	var redirectServiceLogin = function (){
+		req.session.error = 'Access denied!';
+	    req.flash('target_service_locale',targetServiceLocale);
+	    res.redirect('/serviceadmin');     
+	}
+	if (req.session.user) {
+		if (req.session.user.svcAdmin == true){
+			next(req.session.user);
+		}else{
+			redirectServiceLogin();
+		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+  	} else {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  		redirectServiceLogin();
+  	}
+}
