@@ -12,11 +12,6 @@ var OAuth2 = googleapis.auth.OAuth2;
 
 var SERVICE_ACCOUNT_EMAIL = '614118273237-o9khb1d1dqlj54f36jp5nsvjnehvd7i6@developer.gserviceaccount.com';
 var SERVICE_ACCOUNT_KEY_FILE = './server/8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.pem';
-<<<<<<< HEAD
-//8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.p12
-//8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.cer
-=======
->>>>>>> 0bc21098240e8c4bc0925cc6b9cb6281e71b35ae
 //var passport = require('passport')
 //  , GoogleStrategy = require('passport-google').Strategy;
 
@@ -105,12 +100,12 @@ GoogleServices.prototype.getUserAndDriveProfile = function(code,callback){
 	getAccessToken(code,function(oauth2Client,tokens){
 	  	_executeCommand(oauth2Client,function(client,oauth2Client){
 	  		//var userName;
-	  		_getUserProfile(client,oauth2Client,'me',function(err,results){
+	  		_getUserProfile(client,oauth2Client,'me',function(err,results){callback('profile',err,results,tokens,oauth2Client);});
 	  			//userEmail = results.name;
-	  			callback('profile',err,results,tokens,oauth2Client);});
-	  		_getDriveProfile(client,oauth2Client,'me',function(err,results){
+	  			
+	  		_getDriveProfile(client,oauth2Client,'me',function(err,results){callback('drive',err,results,tokens,oauth2Client);});
 
-	  			callback('drive',err,results,tokens,oauth2Client);
+	  			
 	  			//return the system files 
 	  			/*var errCallback = function(errMessage,errObject){
 					console.log(errMessage);
@@ -154,11 +149,8 @@ GoogleServices.prototype.getUserAndDriveProfile = function(code,callback){
 					// at this level, return spreadsheet that are only the cat's excel sheet. 
 	  				callback('drive',err,results,tokens,oauth2Client);
 				}
-	  			listServiceAccountFiles(successCallback,errorCallback); */
-
-	  			
-	  		
-	  	});
+	  			listServiceAccountFiles(successCallback,errorCallback); */  	
+		});
 	});
 }
 
@@ -373,12 +365,10 @@ function _addPermissionsToFile(fileID,userID,email){
 	  client.drive.permissions.insert({
 	  	fileId:fileID,
 	  	resource:{
-	  		{
-			    id:userID,
-			    value: email,
-			    type: 'user',
-			    role: 'writer'
-			}
+		    id:userID,
+		    value: email,
+		    type: 'user',
+		    role: 'writer'
 	  	}
 	  }).withAuthClient(authClient).execute(function(err,response) {
 	  		if (err){
@@ -428,31 +418,9 @@ function _serviceAccountExecution(authClientCallback){
 		    // User to impersonate (leave empty if no impersonation needed)
 		    '');
 
-<<<<<<< HEAD
-		  authClient.authorize(function(err, tokens) {
-			  if (err) {
-			    errorCallback('Error authorizing account in authClient (Service account)',err);
-			    return;
-			  }
-
-			  // Successfully authorize account
-			  // Make an authorized request to list Drive files.
-			  client.drive.files.list().withAuthClient(authClient).execute(function(err, files) {
-			  		if (err) {
-					    errorCallback('Error accessing files with authClient (Service Account)',err);
-					    return;
-					}
-					console.log("HI")
-					console.log(files);
-
-			  		successCallback(files,tokens);
-				});
-			});
-=======
 		  authClient.authorize(function(err,tokens){
 		  	authClientCallback(err,tokens,client,authClient);
 		  });
->>>>>>> 0bc21098240e8c4bc0925cc6b9cb6281e71b35ae
 
 		});
 }
