@@ -150,11 +150,17 @@
                         <h4 class="modal-title" id="myModalLabel">Remove File Access</h4>
                       </div>
                       <div class="modal-body">
+                        <%var owner = file.ownerNames[0];
+                          var permissionType = 'editor'
+                          if (owner.indexOf('developer.gserviceaccount.com')>-1){
+                            permissionType = 'owner';
+                          }
+                        %>
                         <p>Remove this file '<%=file.title%>' from your list?</p>
                       </div>
                       <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-warning" onClick="servicePermission('<%=file.id%>')">Remove Access</button>
+                        <button type="button" class="btn btn-warning" onClick="servicePermission('<%=file.id%>','<%=permissionType%>')">Remove Access</button>
                       </div>
                     </div>
                   </div>
@@ -193,9 +199,9 @@
           xhr.send();
         }
 
-        var servicePermission =function(id){
+        var servicePermission =function(id,permissionType){
           var xhr = new XMLHttpRequest();
-          xhr.open('GET', '/service/ws/files?permission='+id, true);
+          xhr.open('GET', '/service/ws/files?permission='+id+'&permissionType='+permissionType, true);
           xhr.onreadystatechange = function() {
               if(xhr.readyState == 4 && xhr.status==200){
                 var jsonResponse = JSON.parse(xhr.responseText);

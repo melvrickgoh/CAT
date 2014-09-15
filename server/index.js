@@ -130,6 +130,7 @@ main_router.route('/service/ws/files')
 					gSvcs.deleteServiceFile(fileID,successCallback,errCallback);
 				}else if (req.query.permission){
 					var fileID = req.query.permission;
+					var permissionType = req.query.permissionType;
 					gSvcs = new GoogleServices();
 					var errCallback = function(errMessage,errObject){
 						res.json({error:true,message:errMessage});
@@ -138,7 +139,16 @@ main_router.route('/service/ws/files')
 					var successCallback = function(err,success){
 						res.json({error:false,message:success});
 					}
-					gSvcs.removeServiceFilePermissions(fileID,successCallback,errCallback);
+					switch(permissionType){
+						case 'owner':
+							gSvcs.deleteServiceFile(fileID,successCallback,errCallback);
+							break;
+						case 'editor':
+							gSvcs.removeServiceFilePermissions(fileID,successCallback,errCallback);
+							break;
+						default:
+					}
+					
 				}else{
 					res.json({error:true,message:'Invalid Web Service Call'});
 				}
