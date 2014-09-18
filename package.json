@@ -12,9 +12,9 @@
   },
   "version": "0.0.1",
   "private": true,
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node server.js --websocket-port=$OPENSHIFT_NODEJS_PORT --log-level=1"
+    "start": "node app.js --websocket-port=$OPENSHIFT_NODEJS_PORT --log-level=1"
   },
   "engines": {
     "node": ">= 0.10.0",
