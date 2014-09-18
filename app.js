@@ -6,7 +6,7 @@ var express = require('express'),
 http = require('http'),
 path = require('path'),
 favicons = require('connect-favicons'),
-serveIndex = require('serve-index'),
+//serveIndex = require('serve-index'),
 morgan = require('morgan'),
 bodyParser = require('body-parser'),
 methodOverride = require('method-override'),
@@ -32,7 +32,7 @@ var app = express();
 app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3003);
 app.set('ipaddress', process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1");
 // config
-app.set('views', __dirname + '/client');
+app.set('views', __dirname + '/client/view');
 app.set('view engine', 'ejs');
 app.engine('.html', require('ejs').renderFile);
 
