@@ -31,13 +31,14 @@ var app = express();
 // all environments
 app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3003);
 app.set('ipaddress', process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1");
+app.set('pg',process.env.OPENSHIFT_POSTGRESQL_DB_URL || 'postgresql://127.0.0.1:5432');
 // config
 app.set('views', __dirname + '/client');
 app.set('view engine', 'ejs');
 app.engine('.html', require('ejs').renderFile);
 
 console.log(process.env.OPENSHIFT_POSTGRESQL_DB_URL);
-console.log(process.env);
+//console.log(process.env);
 
 /*
 * Middleware Config
