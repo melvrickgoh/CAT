@@ -62,6 +62,12 @@ main_router.route('/login')
 		res.render('view/login.ejs');
 	});
 
+main_router.route('/plain')
+	.all(function(req,res){
+		console.log('/plain request: ' + req);
+		res.render('view/plain.ejs');
+	});
+
 main_router.route('/serviceadmin')
 	.all(function(req,res){
 		_restrict(req,res,function(user){

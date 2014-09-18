@@ -40,7 +40,7 @@ app.engine('.html', require('ejs').renderFile);
 * Middleware Config
 */
 console.log(__dirname);
-console.log(app.use(favicons(__dirname + '/client/img/icons')));
+//console.log(app.use(favicons(__dirname + '/client/img/icons')));
 //directory exposure to the public
 console.log(app.use(serveIndex(path.join(__dirname, '/client'), { icons:true })));
 //app.use(serveIndex('/dropbox', '/Users/Melvrick/Dropbox'));
