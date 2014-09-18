@@ -29,7 +29,7 @@ var router = require('./server');
 var app = express();
 
 // all environments
-app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 8080);
+app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3003);
 app.set('ipaddress', process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1");
 // config
 app.set('views', __dirname + '/client/view');
@@ -39,10 +39,11 @@ app.engine('.html', require('ejs').renderFile);
 /*
 * Middleware Config
 */
-app.use(favicons(__dirname + '/client/img/icons'));
+console.log(__dirname);
+app.use(favicons(__dirname + 'client/img/icons'));
 //directory exposure to the public
-app.use(serveIndex(path.join(__dirname, '/client'), { icons:true }));
-app.use(serveIndex('/dropbox', '/Users/Melvrick/Dropbox'));
+app.use(serveIndex(path.join(__dirname, 'client'), { icons:true }));
+//app.use(serveIndex('/dropbox', '/Users/Melvrick/Dropbox'));
 //logger. dev shows logs on req not resp
 app.use(morgan({format:'dev',immediate:true}));
 //setting input types of incoming details
@@ -56,7 +57,6 @@ app.use(methodOverride());
 // Use cookies
 app.use(cookieParser());
 
-console.log('setting session pgSession');
 //Session variable
 app.use(session({
   store: new pgSession({
@@ -120,7 +120,6 @@ app.use('/', router.index);
 //app.get('/auth/google/return', 
 //  passport.authenticate('google', { successRedirect: '/',
 //                                    failureRedirect: '/login' }));
-console.log('server creation with ' + router.index);
 // Run server
 http.createServer(app).listen(app.get('port'), app.get('ipaddress'),function(){
   var dao = new pgDAO();

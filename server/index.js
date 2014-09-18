@@ -58,6 +58,7 @@ main_router.route('/')
 
 main_router.route('/login')
 	.all(function(req,res){
+		console.log('/login receiving request: ' + req);
 		res.render('login.ejs');
 	});
 
