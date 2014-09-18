@@ -63,7 +63,7 @@ app.use(cookieParser());
 app.use(session({
   store: new pgSession({
     pg : pg,
-    conString : 'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat'
+    conString : process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat'
   }),
   secret: process.env.FOO_COOKIE_SECRET || 'usHCpy7ndmuYy1cF3td7ytBV',//HMAC implementation for certifying modifications to the session's values
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
@@ -114,7 +114,7 @@ app.use('/', router.index);
 
 // Run server
 http.createServer(app).listen(app.get('port'), app.get('ipaddress'),function(){
-  var dao = new pgDAO();
+  var dao = new pgDAO({pgURL:process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat'});
   dao.initialize();
 
   console.log('Express server listening on port ' + app.get('port'));

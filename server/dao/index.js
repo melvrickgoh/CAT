@@ -3,6 +3,9 @@ conString = "postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat",
 handleError;
 
 function pgDAO (options){
+	if (options){
+		conString = options.pgURL;
+	}
 	this.DEFAULT_OPTIONS = {
 		create: {
 			name: 'table_name',
