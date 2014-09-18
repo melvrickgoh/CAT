@@ -55,6 +55,8 @@ app.use(methodOverride());
 
 // Use cookies
 app.use(cookieParser());
+
+console.log('setting session pgSession');
 //Session variable
 app.use(session({
   store: new pgSession({
@@ -118,7 +120,7 @@ app.use('/', router.index);
 //app.get('/auth/google/return', 
 //  passport.authenticate('google', { successRedirect: '/',
 //                                    failureRedirect: '/login' }));
-
+console.log('server creation with ' + router.index);
 // Run server
 http.createServer(app).listen(app.get('port'), app.get('ipaddress'),function(){
   var dao = new pgDAO();
