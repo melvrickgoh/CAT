@@ -59,7 +59,7 @@ main_router.route('/')
 main_router.route('/login')
 	.all(function(req,res){
 		console.log('/login receiving request: ' + req);
-		res.render('login.ejs');
+		res.render('view/login.ejs');
 	});
 
 main_router.route('/serviceadmin')
