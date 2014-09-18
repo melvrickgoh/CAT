@@ -65,7 +65,7 @@ main_router.route('/login')
 main_router.route('/plain')
 	.all(function(req,res){
 		console.log('/plain request: ' + req);
-		res.render('plain.ejs');
+		res.render('view/plain.ejs');
 	});
 
 main_router.route('/serviceadmin')
