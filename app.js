@@ -42,7 +42,7 @@ app.engine('.html', require('ejs').renderFile);
 console.log(__dirname);
 //console.log(app.use(favicons(__dirname + '/client/img/icons')));
 //directory exposure to the public
-console.log(app.use(serveIndex(path.join(__dirname, '/client'), { icons:true })));
+//console.log(app.use(serveIndex(path.join(__dirname, '/client'), { icons:true })));
 //app.use(serveIndex('/dropbox', '/Users/Melvrick/Dropbox'));
 //logger. dev shows logs on req not resp
 app.use(morgan({format:'dev',immediate:true}));
