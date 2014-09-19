@@ -47,9 +47,9 @@ var prettyjson = require('prettyjson');
 * APP Classes
 */
 
-var bootstrapper = new BootstrapManager(),
-uController = new UserController(),
-fController = new FileController({});
+var bootstrapper = new BootstrapManager({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')}),
+uController = new UserController({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')}),
+fController = new FileController({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')});
 
 main_router.route('/')
 	.all(function(req,res){

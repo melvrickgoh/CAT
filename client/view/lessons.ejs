@@ -40,7 +40,7 @@
         <ul class="nav navbar-nav">
            <li><a href="/mydrive">My Drive</a></li>
            <li class="active"><a href="/lessons">Lessons</a></li>
-           <!--
+
            <li class="dropdown">
               <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                  Lessons<b class="caret"></b>
@@ -72,7 +72,7 @@
                  <% } %>
               </ul>
            </li>
-            -->
+
 
         </ul>
      </div>
@@ -80,11 +80,10 @@
 
   <div class="container container-xs-height">
         <div class="row row-xs-height">
-            <% if (lessonKeys.length >= 1) { %>
-             <% 
+            <% if (lessonKeys.length >= 1) {
               lessonKeys.forEach(function(key){ 
-                  var exercises = files[key], //exercises is a subset of a lesson in terms of representation
-                  exerciseKeys = Object.keys(exercises);
+                  var exercises = files[key];
+                  var exerciseKeys = Object.keys(exercises);
                     var exercise = exercises[exerciseKeys[0]],
                     lessonDes = exercise.lessonDetails,
                     objective = lessonDes.objective;                  
@@ -117,7 +116,6 @@
                                   var extractionPattern = function (str){
                                     var nameMatch = str.match(/^([^@]*)@/),
                                     name = nameMatch ? nameMatch[1] : null;
-                                    console.log(str.indexOf('@gtempaccount.com'));
                                     if (str.indexOf('@gtempaccount.com')!=-1){
                                       var tempUsername = name.split('@gtempaccount.com')[0];
                                       var subTempUsername = tempUsername.split('%')[0];
@@ -149,7 +147,6 @@
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="http://code.jquery.com/jquery-2.1.0.min.js"/>
     <script type="text/javascript">
-      console.log($('.resize').height());
       $('.resize').css({
         'height':$('.resize').height()
       });

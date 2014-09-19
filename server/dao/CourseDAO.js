@@ -1,12 +1,15 @@
 var pgDAO = require('./index');
-var dao = new pgDAO({});
+var dao = new pgDAO({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||"postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat")});
 function CourseDAO(options){
 	this.TABLENAME = 'course',
 	this.EXERCISE_TABLE_NAME = 'exercises',
 	this.lessonMeta = {};
 
-	this.loadLessonDetails();//load in lesson meta for future reference
+	if (options){
+		dao = new pgDAO({pgURL:options.pgURL});
+	}
 
+	this.loadLessonDetails();//load in lesson meta for future reference
 	/*this.createExerciseTable(function(isSuccess,result){
 		console.log(isSuccess);
 		console.log(result);

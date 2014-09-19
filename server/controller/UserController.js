@@ -1,10 +1,12 @@
 var UserDAO = require('../dao/UserDAO');
-var dao = new UserDAO({});
+var dao;
 
 var User = require('../entity/user');
 
 function UserController(options){
-
+	if(options){
+		dao = new UserDAO({pgURL:options.pgURL});
+	}
 }
 
 UserController.prototype.processLogin = function(user,callback){

@@ -1,8 +1,11 @@
 var File = require('../entity/file'),
 CourseDAO = require('../dao/CourseDAO'),
-courseDAO = new CourseDAO({});
+courseDAO;
 
 function FileController(options){
+	if (options){
+		courseDAO = new CourseDAO({pgURL:options.pgURL});
+	}
 	this.files = undefined;
 }
 
@@ -15,7 +18,6 @@ FileController.prototype.loadInFiles = function(jsonFileList,callback){
 	endFunction = function(lessons){
 		if (lastIteration && !asyncOngoing){
 			this.files = lessons;
-			//console.log(this.files);
 			callback(this.files);//note that sometimes there may be errors if backend can't keep up
 		}
 	};

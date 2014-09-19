@@ -114,7 +114,7 @@ app.use('/', router.index);
 
 // Run server
 http.createServer(app).listen(app.get('port'), app.get('ipaddress'),function(){
-  var dao = new pgDAO({pgURL:process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat'});
+  var dao = new pgDAO({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')});
   dao.initialize();
 
   console.log('Express server listening on port ' + app.get('port'));
