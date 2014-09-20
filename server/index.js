@@ -68,6 +68,12 @@ main_router.route('/plain')
 		res.render('plain.ejs');
 	});
 
+
+main_router.route('/404')
+	.all(function(req,res){
+		res.render('error.ejs');
+	});
+
 main_router.route('/serviceadmin')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
@@ -239,9 +245,16 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 					console.log('filecreation');
 
 					gSvcs.copyServiceDriveFileServiceAuth(exercise.id,exercise.title + ' ('+user.emailUsername+')',user,function(err,fileResponse,fileAndHTTPResponse){
-						gSvcs._consoleLogServiceAccountFiles();
-						//console.log(err);
-						//console.log(fileResponse);
+						//gSvcs._consoleLogServiceAccountFiles();
+						console.log(user.email);
+						if (!err){
+							gSvcs.addPermissionsToFile(fileResponse.id,user.id,user.email,function(err,response){
+								console.log('Permissions response');
+								console.log(err);
+								console.log(response);
+							})
+						}
+						console.log(err);
 						//console.log(fileAndHTTPResponse);
 					});
 				}else{

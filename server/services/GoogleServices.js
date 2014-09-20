@@ -160,7 +160,6 @@ GoogleServices.prototype.copyServiceDriveFileServiceAuth = function(fileId,newNa
 	    	errorCallback('Error authorizing account in authClient (Service account)',err);
 	    	return;
 	  	}
-	  	console.log(client.drive.files);
 	  	// Successfully authorize account
 	  	// Make an authorized request to list Drive files.
 	  	_copyServiceFile(client,authClient,fileId,newName,callback);
@@ -354,7 +353,7 @@ GoogleServices.prototype.removeServiceFilePermissions = function(fileid,successC
 	_serviceAccountExecution(authClientCallback);
 }
 
-function _addPermissionsToFile(fileID,userID,email){
+GoogleServices.prototype.addPermissionsToFile = function(fileID,userID,email,callback){
 	var authClientCallback = function(err, tokens, client, authClient) {
 	  if (err) {
 	    errorCallback('Error authorizing account in authClient (Service account)',err);
@@ -372,9 +371,9 @@ function _addPermissionsToFile(fileID,userID,email){
 	  	}
 	  }).withAuthClient(authClient).execute(function(err,response) {
 	  		if (err){
-	  			errorCallback(err);
+	  			callback(err);
 	  		}else{
-	  			successCallback(response);
+	  			callback(response);
 	  		}
 		});
 	}
