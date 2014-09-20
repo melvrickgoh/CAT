@@ -71,7 +71,10 @@ main_router.route('/plain')
 
 main_router.route('/404')
 	.all(function(req,res){
-		res.render('error.ejs');
+		res.render('error.ejs',{
+			code:'404',
+			message:'Sorry, we are not sure what you looking for.'
+		});
 	});
 
 main_router.route('/serviceadmin')

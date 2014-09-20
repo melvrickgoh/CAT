@@ -1,6 +1,12 @@
+<%
+  var errMsg = 'Sorry we are not sure what you looking for.',
+  errCode = '404'
+  if (code){    errCode = code;  }
+  if (message){    errMsg = message;  }
+%>
 <html lang="en">
 <head>
-  <title>404 | Page not found</title>
+  <title><%=errCode%> | Page not found</title>
   <link rel="shortcut icon" href="../img/favicon.png"/>
   <meta charset="utf-8" />
 
@@ -24,9 +30,9 @@
 
     <!-- BEGIN CONTENT -->
     <div class="wrap_content">
-      <h1>404</h1>
+      <h1><%=errCode%></h1>
       <h2>Uh Oh, It's Dark</h2><br/>
-      <p>Sorry we are not sure what you looking for.</p>
+      <p><%=errMsg%></p>
       <p>Try returning to the <a href="/lessons">lessons page</a> and starting over.</p>
     </div><!-- End div content -->
     <!-- END CONTENT -->

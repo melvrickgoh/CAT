@@ -37,8 +37,6 @@ app.set('views', __dirname + '/client/view');
 app.set('view engine', 'ejs');
 app.engine('.html', require('ejs').renderFile);
 
-console.log(process.env.OPENSHIFT_POSTGRESQL_DB_URL);
-//console.log(process.env);
 
 /*
 * Middleware Config
