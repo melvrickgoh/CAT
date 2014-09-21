@@ -1,10 +1,13 @@
 var File = require('../entity/file'),
 CourseDAO = require('../dao/CourseDAO'),
-courseDAO;
+UserFileDAO = require('../dao/UserFileDAO'),
+courseDAO,
+ufDAO;
 
 function FileController(options){
 	if (options){
 		courseDAO = new CourseDAO({pgURL:options.pgURL});
+		ufDAO = new UserFileDAO({pgURL:options.pgURL});
 	}
 	this.files = undefined;
 }
@@ -86,6 +89,10 @@ FileController.prototype.validateURLPattern = function(file){
 		}
 	});
 	return urlPattern
+}
+
+FileController.prototype.updateUserFileDB = function(record,callback){
+	ufDAO.insertNewRecord(record,callback);
 }
 
 module.exports = FileController;

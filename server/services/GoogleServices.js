@@ -2,7 +2,7 @@ var googleapis = require('../lib/googleapis');
 var OAuth2Client = googleapis.OAuth2Client;
 var CLIENT_ID = '614118273237-nogtgnp2dm5u9ruisbgq4tu579nq8800.apps.googleusercontent.com';
 var CLIENT_SECRET = 'usHCpy7ndmuYy1cF3td7ytBV';
-var REDIRECT_URL = 'http://cat-melvrickgoh.rhcloud.com/' + 'google/oauth2callback';
+var REDIRECT_URL = 'http://localhost:3003/' + 'google/oauth2callback';
 
 //localhost redirect: 'http://localhost:3003/'
 //google redirect: 'http://cat-melvrickgoh.rhcloud.com/'
@@ -363,18 +363,34 @@ GoogleServices.prototype.addPermissionsToFile = function(fileID,userID,email,cal
 	  // Make an authorized request to list Drive files.
 	  client.drive.permissions.insert({
 	  	fileId:fileID,
-	  	resource:{
-		    id:userID,
-		    value: email,
-		    type: 'user',
-		    role: 'writer'
-	  	}
-	  }).withAuthClient(authClient).execute(function(err,response) {
-	  		if (err){
-	  			callback(err);
-	  		}else{
-	  			callback(response);
-	  		}
+	  	emailMessage: 'It does not do to dwell on dreams and forget to live, remember that. ~ Dumbledore'
+	  },{
+		id:userID,
+		value: email,
+		type: 'user',
+		role: 'writer'
+	  }
+	  ).withAuthClient(authClient).execute(function(err,response) {
+	  		callback(err,response);
+		});
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+GoogleServices.prototype.updateFileMetadata = function(fileID,title,callback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    callback(err);
+	    return;
+	  }
+	  // Make an authorized request to patch file title.
+	  client.drive.files.patch({
+	  	fileId:fileID,
+	  },{
+		title:title
+	  }
+	  ).withAuthClient(authClient).execute(function(err,response) {
+	  		callback(err,response);
 		});
 	}
 	_serviceAccountExecution(authClientCallback);
