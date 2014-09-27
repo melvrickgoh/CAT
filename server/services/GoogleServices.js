@@ -62,6 +62,7 @@ GoogleServices.prototype.login = function(response){
 		});
 }
 
+
 GoogleServices.prototype.loginCallback = function(code,response){
 	this.getAccessToken(code,function(tokens){
 		response.send(JSON.stringify(tokens));
@@ -97,31 +98,49 @@ GoogleServices.prototype.getDriveProfile = function(code,callback){
 }
 
 GoogleServices.prototype.getUserAndDriveProfile = function(code,callback){
+	var self = this;
 	getAccessToken(code,function(oauth2Client,tokens){
 	  	_executeCommand(oauth2Client,function(client,oauth2Client){
-	  		//var userName;
-	  		_getUserProfile(client,oauth2Client,'me',function(err,results){callback('profile',err,results,tokens,oauth2Client);});
-	  			//userEmail = results.name;
+	  		var userName = "";
+	  		var userEmail = "";
+	  		_getUserProfile(client,oauth2Client,'me',function(err,results){
+	  			userName = results.displayName;
+
+	  			console.log(userName);
+	  			callback('profile',err,results,tokens,oauth2Client);
+
+	  		});
 	  			
-	  		_getDriveProfile(client,oauth2Client,'me',function(err,results){callback('drive',err,results,tokens,oauth2Client);});
+	  			
+	  		_getDriveProfile(client,oauth2Client,'me',function(err,results){callback('drive',err,results,tokens,oauth2Client)});
 
 	  			
 	  			//return the system files 
 	  			/*var errCallback = function(errMessage,errObject){
 					console.log(errMessage);
+					console.log(errObject);
+					
 				}
 				var successCallback = function(files,tokens){
 					// compare the drive documents and system documents with their id
 
 					var filesObj = results.items;
+					console.log('File items length >>> '+ filesObj.length);
+
+					var systemFiles = files.items;
+					console.log('Service files length >>> ' + systemFiles.length);
 					//clear the results list of client drive.
-	  				results.items.clear();
+
+	  				var newUserFiles = [];
 					// create a loop for the system drive documents first
-					while (files.hasNext()) {
-  							var file = files.next();
-  							console.log(file);
-  							var systemFileTitle = file.title;
-  							var systemFileId = file.id;
+					for (j=0; j<systemFiles.length; j++) {
+  							
+  							console.log(j);
+  							var f = systemFiles[j];
+  							var systemFileTitle = f.title;
+  							console.log('system files name >>>' +systemFileTitle);
+  							var systemFileId = f.id;
+  							var keyTitle = userName + '_' + systemFileTitle;
 	  						
 	  						//check that this fileId exist within client's drive	  					
 	      					//do a loop or check for existing id
@@ -131,36 +150,59 @@ GoogleServices.prototype.getUserAndDriveProfile = function(code,callback){
 	      					var counter = 0;
 	      					for (var i in filesObj){
 				      			var fileObj = filesObj[i];
-				      			console.log(fileObj.title);
+				      			console.log("client file >>>" + fileObj.title);
 								var fileTitle = fileObj.title;
-								if (fileTitle == systemFileTitle) {
-									counter+=1;				
+								if (fileTitle == keyTitle) {
+									counter+=1;	
+									newUserFiles.push(fileObj);			
 								}
 							
 							}; 		
 
+							console.log('counter >>>' +counter);
+								
 							if(counter == 0) {
-								var copiedFile = copyFile(systemFileId,systemFileTitle);
-								results.push(copiedFile);
+								console.log('enter here');
+
+								var successCopyCallback = function(err,file) {
+									console.log(err);
+									console.log('copied file name >>>' + file.title);
+
+									var updateCallback = function(err,file) {
+										console.log(err);
+										console.log('new file title >>>' + file.title);
+										newUserFiles.push(file);
+									}
+
+									self.updateServiceDriveFileServiceAuth(file.id,keyTitle,updateCallback);
+									
+
+								}
+								self.copyServiceDriveFileServiceAuth(systemFileId,systemFileTitle,successCopyCallback);
+								
 							}	
+
 					};
 
 					
-					// at this level, return spreadsheet that are only the cat's excel sheet. 
-	  				callback('drive',err,results,tokens,oauth2Client);
+						results.items = newUserFiles;	
+						// at this level, return spreadsheet that are only the cat's excel sheet. 
+		  				callback('drive',err,results,tokens,oauth2Client);
+		  			
 				}
-	  			listServiceAccountFiles(successCallback,errorCallback); */  	
-		});
+				self.listServiceAccountFiles(successCallback,errCallback); 
+		});*/
 	});
+});
 }
 
-GoogleServices.prototype.copyServiceDriveFileServiceAuth = function(fileId,newName,user,callback){
+GoogleServices.prototype.copyServiceDriveFileServiceAuth = function(fileId,newName,callback){
 	var authClientCallback = function(err, tokens, client, authClient) {
 		if (err) {
 	    	errorCallback('Error authorizing account in authClient (Service account)',err);
 	    	return;
 	  	}
-	  	console.log(client.drive.files);
+	  	//console.log(client.drive.files);
 	  	// Successfully authorize account
 	  	// Make an authorized request to list Drive files.
 	  	_copyServiceFile(client,authClient,fileId,newName,callback);
@@ -172,7 +214,7 @@ GoogleServices.prototype.copyServiceDriveFileServiceAuth = function(fileId,newNa
 GoogleServices.prototype.copyServiceDriveFile = function(fileId,newName,user,callback){
 	var authClient = user.serviceAuthClient;
 	_executeCommand(authClient,function(client,oauth2Client){
-		console.log(JSON.stringify(client));
+		//console.log(JSON.stringify(client));
 		_copyServiceFile(client,oauth2Client,fileId,newName,callback);
 	});
 }
@@ -186,6 +228,36 @@ function _copyServiceFile(client,authClient,fileId,newName,callback){
 	}).withAuthClient(authClient).execute(callback);
 }
 
+GoogleServices.prototype.updateServiceDriveFileServiceAuth = function(fileId,newTitle,callback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+		if (err) {
+	    	errorCallback('Error authorizing account in authClient (Service account)',err);
+	    	return;
+	  	}
+	  	console.log(client.drive.files);
+	  	// Successfully authorize account
+	  	// Make an authorized request to list Drive files.
+	  	_updateServiceFile(client,authClient,fileId,newTitle,callback);
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+GoogleServices.prototype.updateServiceDriveFile = function(fileId,newTitle,user,callback){
+	var authClient = user.serviceAuthClient;
+	_executeCommand(authClient,function(client,oauth2Client){
+		console.log(JSON.stringify(client));
+		_copyServiceFile(client,oauth2Client,fileId,newTitle,callback);
+	});
+}
+
+function _updateServiceFile(client,authClient,fileId,newTitle,callback){
+	client.drive.files.update({ 
+		fileId : fileId,
+		resource: { 
+			title: newTitle
+		} 
+	}).withAuthClient(authClient).execute(callback);
+}
 function _getUserProfile(client, authClient, userId, callback){
     client.plus.people.get({ userId: userId }).withAuthClient(authClient).execute(callback);
 }
@@ -248,6 +320,8 @@ function copyFile(originFileId, copyTitle) {
 * errorCallback(message,errorObject): Message on the error appearing, err object returned by Google APIs
 * where the authclient for svc account is returned, this is the beginning
 */
+
+
 GoogleServices.prototype.listServiceAccountFiles = function(successCallback,errorCallback){
 	var authClientCallback = function(err, tokens, client, authClient) {
 	  if (err) {
