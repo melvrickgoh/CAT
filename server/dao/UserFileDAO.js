@@ -1,7 +1,10 @@
 var pgDAO = require('./index');
-var dao = new pgDAO({});
+var dao;
 function UserFileDAO(options){
-	this.TABLENAME = 'userfile'
+	this.TABLENAME = 'userfile';
+	if (options){
+		dao = new pgDAO({pgURL:options.pgURL});
+	}
 }
 
 UserFileDAO.prototype.createUserFileTable = function(callback){
@@ -102,8 +105,24 @@ UserFileDAO.prototype.getRecord = function(userid,fileid,callback){
 	var selectDetails = {
 		name:this.TABLENAME,
 		distinct:false,
-		attributes:['userid','fileid','fileurl'],
+		attributes:['id','userid','fileid','fileurl'],
 		conditions:['userid = \''+ userid +'\'','fileid = \''+ fileid +'\'']
+	};
+	dao.select(selectDetails,function(isSuccess,result){
+		if (result.length >= 1){
+			callback(true,result);//selected length >= 1
+		}else{
+			callback(false,result);//selected length is 0 or less
+		}
+	});
+}
+
+UserFileDAO.prototype.getUserRecords = function(userid,callback){
+	var selectDetails = {
+		name:this.TABLENAME,
+		distinct:false,
+		attributes:['id','userid','fileid','fileurl'],
+		conditions:['userid = \''+ userid +'\'']
 	};
 	dao.select(selectDetails,function(isSuccess,result){
 		if (result.length >= 1){

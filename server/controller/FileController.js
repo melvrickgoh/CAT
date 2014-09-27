@@ -1,8 +1,14 @@
 var File = require('../entity/file'),
 CourseDAO = require('../dao/CourseDAO'),
-courseDAO = new CourseDAO({});
+UserFileDAO = require('../dao/UserFileDAO'),
+courseDAO,
+ufDAO;
 
 function FileController(options){
+	if (options){
+		courseDAO = new CourseDAO({pgURL:options.pgURL});
+		ufDAO = new UserFileDAO({pgURL:options.pgURL});
+	}
 	this.files = undefined;
 }
 
@@ -15,7 +21,6 @@ FileController.prototype.loadInFiles = function(jsonFileList,callback){
 	endFunction = function(lessons){
 		if (lastIteration && !asyncOngoing){
 			this.files = lessons;
-			//console.log(this.files);
 			callback(this.files);//note that sometimes there may be errors if backend can't keep up
 		}
 	};
@@ -84,6 +89,10 @@ FileController.prototype.validateURLPattern = function(file){
 		}
 	});
 	return urlPattern
+}
+
+FileController.prototype.updateUserFileDB = function(record,callback){
+	ufDAO.insertNewRecord(record,callback);
 }
 
 module.exports = FileController;

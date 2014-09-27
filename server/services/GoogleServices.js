@@ -202,7 +202,6 @@ GoogleServices.prototype.copyServiceDriveFileServiceAuth = function(fileId,newNa
 	    	errorCallback('Error authorizing account in authClient (Service account)',err);
 	    	return;
 	  	}
-	  	//console.log(client.drive.files);
 	  	// Successfully authorize account
 	  	// Make an authorized request to list Drive files.
 	  	_copyServiceFile(client,authClient,fileId,newName,callback);
@@ -428,7 +427,7 @@ GoogleServices.prototype.removeServiceFilePermissions = function(fileid,successC
 	_serviceAccountExecution(authClientCallback);
 }
 
-function _addPermissionsToFile(fileID,userID,email){
+GoogleServices.prototype.addPermissionsToFile = function(fileID,userID,email,callback){
 	var authClientCallback = function(err, tokens, client, authClient) {
 	  if (err) {
 	    errorCallback('Error authorizing account in authClient (Service account)',err);
@@ -438,18 +437,34 @@ function _addPermissionsToFile(fileID,userID,email){
 	  // Make an authorized request to list Drive files.
 	  client.drive.permissions.insert({
 	  	fileId:fileID,
-	  	resource:{
-		    id:userID,
-		    value: email,
-		    type: 'user',
-		    role: 'writer'
-	  	}
-	  }).withAuthClient(authClient).execute(function(err,response) {
-	  		if (err){
-	  			errorCallback(err);
-	  		}else{
-	  			successCallback(response);
-	  		}
+	  	emailMessage: 'It does not do to dwell on dreams and forget to live, remember that. ~ Dumbledore'
+	  },{
+		id:userID,
+		value: email,
+		type: 'user',
+		role: 'writer'
+	  }
+	  ).withAuthClient(authClient).execute(function(err,response) {
+	  		callback(err,response);
+		});
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+GoogleServices.prototype.updateFileMetadata = function(fileID,title,callback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    callback(err);
+	    return;
+	  }
+	  // Make an authorized request to patch file title.
+	  client.drive.files.patch({
+	  	fileId:fileID,
+	  },{
+		title:title
+	  }
+	  ).withAuthClient(authClient).execute(function(err,response) {
+	  		callback(err,response);
 		});
 	}
 	_serviceAccountExecution(authClientCallback);

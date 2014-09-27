@@ -1,8 +1,12 @@
 var pg = require('pg.js'),
-conString = "postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat",
+conString = process.env.OPENSHIFT_POSTGRESQL_DB_URL||"postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat",
 handleError;
 
 function pgDAO (options){
+	if (options){
+		conString = options.pgURL;
+	}
+	console.log('DAO conn: ' + conString);
 	this.DEFAULT_OPTIONS = {
 		create: {
 			name: 'table_name',

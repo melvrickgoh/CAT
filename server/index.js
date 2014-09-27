@@ -47,9 +47,9 @@ var prettyjson = require('prettyjson');
 * APP Classes
 */
 
-var bootstrapper = new BootstrapManager(),
-uController = new UserController(),
-fController = new FileController({});
+var bootstrapper = new BootstrapManager({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')}),
+uController = new UserController({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')}),
+fController = new FileController({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')});
 
 main_router.route('/')
 	.all(function(req,res){
@@ -58,6 +58,7 @@ main_router.route('/')
 
 main_router.route('/login')
 	.all(function(req,res){
+		console.log('/login receiving request: ' + req);
 		res.render('login.ejs');
 	});
 
@@ -65,6 +66,20 @@ main_router.route('/testhome')
 	.all(function(req,res){
 		res.render('home.ejs');
 	});	
+main_router.route('/plain')
+	.all(function(req,res){
+		console.log('/plain request: ' + req);
+		res.render('plain.ejs');
+	});
+
+
+main_router.route('/404')
+	.all(function(req,res){
+		res.render('error.ejs',{
+			code:'404',
+			message:'Sorry, we are not sure what you looking for.'
+		});
+	});
 
 main_router.route('/serviceadmin')
 	.all(function(req,res){
@@ -107,8 +122,10 @@ main_router.route('/service')
 			_restrictServiceAdmin(req,res,function(user){
 				gSvcs = new GoogleServices();
 				var errCallback = function(errMessage,errObject){
-					console.log(errMessage);
-					res.render('error.ejs',errMessage);
+					res.render('error.ejs',{
+						code:'500',
+						message:'Service Error:'+errMessage
+					});
 				}
 				var successCallback = function(files,tokens,authClient){
 					res.render('administrator-dashboard.ejs',{files:files.items, googleDelete:gSvcs.deleteServiceFile});
@@ -122,9 +139,9 @@ main_router.route('/service/ws/files')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
 			_restrictServiceAdmin(req,res,function(user){
+				gSvcs = new GoogleServices();
 				if (req.query.delete){
 					var fileID = req.query.delete;
-					gSvcs = new GoogleServices();
 					var errCallback = function(errMessage,errObject){
 						res.json({error:true,message:errMessage});
 					}
@@ -135,7 +152,7 @@ main_router.route('/service/ws/files')
 					gSvcs.deleteServiceFile(fileID,successCallback,errCallback);
 				}else if (req.query.permission){
 					var fileID = req.query.permission;
-					gSvcs = new GoogleServices();
+					var permissionType = req.query.permissionType;
 					var errCallback = function(errMessage,errObject){
 						res.json({error:true,message:errMessage});
 					}
@@ -143,7 +160,59 @@ main_router.route('/service/ws/files')
 					var successCallback = function(err,success){
 						res.json({error:false,message:success});
 					}
-					gSvcs.removeServiceFilePermissions(fileID,successCallback,errCallback);
+					switch(permissionType){
+						case 'owner':
+							gSvcs.deleteServiceFile(fileID,successCallback,errCallback);
+							break;
+						case 'editor':
+							gSvcs.removeServiceFilePermissions(fileID,successCallback,errCallback);
+							break;
+						default:
+					}
+					
+				}else if (req.query.bulk){
+					var postedResults = req.body,
+					errors = [],
+					successes = [],
+					counter = 0;
+					var superCallback = function(){
+						res.json({success:true,errors:errors,successes:successes});
+					}
+					for (var i = 0; i<postedResults.length; i++){
+						var filemeta = postedResults[i],
+						fileid = filemeta.fileid;
+						
+						switch(filemeta.permission){
+							case 'owner':
+								gSvcs.deleteServiceFile(fileid,function(err,success){
+									counter++;
+									if (counter == postedResults.length){
+										superCallback();
+									}
+								},function(message,err){
+									counter++;
+									if (counter == postedResults.length){
+										superCallback();
+									}
+								});
+								break;
+							case 'editor':
+								gSvcs.removeServiceFilePermissions(fileid,function(err,success){
+									counter++;
+									if (counter == postedResults.length){
+										superCallback();
+									}
+								},function(message,err){
+									counter++;
+									if (counter == postedResults.length){
+										superCallback();
+									}
+								});
+								break;
+							default:
+						}
+						
+					}
 				}else{
 					res.json({error:true,message:'Invalid Web Service Call'});
 				}
@@ -208,7 +277,10 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 			captureAndRenderExercises = function(systemFiles){
 				var wantedFile = captureFile(systemFiles,lessonname);
 				if (wantedFile==null){
-					res.render('error.ejs','404 file not found');
+					res.render('error.ejs',{
+						code:'500',
+						message:'System Error: File not Found'
+					});
 				}else{
 					user.targettedExercise = wantedFile.exercise;
 					user.targettedLesson = wantedFile.lesson;
@@ -224,16 +296,63 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 				var wantedFile = captureFile(systemFiles,lessonname);
 				if (wantedFile != null){
 					var exercise = wantedFile.exercise;
-					console.log('filecreation');
 
 					gSvcs.copyServiceDriveFileServiceAuth(exercise.id,exercise.title + ' ('+user.emailUsername+')',user,function(err,fileResponse,fileAndHTTPResponse){
-						gSvcs._consoleLogServiceAccountFiles();
-						//console.log(err);
-						//console.log(fileResponse);
-						//console.log(fileAndHTTPResponse);
+						if (!err){
+							gSvcs.updateFileMetadata(fileResponse.id,exercise.title+' (' + user.emailUsername + ')',function(err,response){
+								var fileResponse = response;
+								if (err){
+									res.json({
+										success:false,
+										err:'Failure to update the file title',
+										code:3
+									})
+								}else{
+									gSvcs.addPermissionsToFile(fileResponse.id,user.id,user.email,function(err,response){
+										if(err){
+											res.json({
+												success:false,
+												err:'Failure to add the user to file',
+												code:4
+											});
+										}else{
+											fileResponse.success = true,
+											fileResponse.role = response.role,
+											fileResponse.type = response.type;
+											fController.updateUserFileDB({
+												userid:user.id,
+												fileid:fileResponse.id,
+												fileurl:fileResponse.alternateLink
+											},function(err,result){
+												if(err){
+													res.json({
+														success:false,
+														err:'Failure to insert into the user database',
+														code:5
+													});
+												}else{
+													res.json(fileResponse);
+												}
+											});
+										}
+									});
+								}
+							});
+						}else{
+							res.json({
+								success:false,
+								err:'Failure to copy file',
+								code:2
+							});
+						}
 					});
 				}else{
 					//errorneous
+					res.json({
+						success:false,
+						err:'Failure to find file',
+						code:1
+					})
 				}
 
 			}else{
@@ -243,8 +362,10 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 					captureAndRenderExercises(systemFiles);
 				}else{
 					var errCallback = function(errMessage,errObject){
-						console.log(errMessage);
-						res.render('error.ejs',errMessage);
+						res.render('error.ejs',{
+							code:'500',
+							message:'Service Error:'+errMessage
+						});
 					}
 					var successCallback = function(files,tokens,authClient){
 						user.serviceAuthClient =authClient;
@@ -268,8 +389,10 @@ main_router.route('/lessons')
 			gSvcs = new GoogleServices();
 			//var data = req.flash('user');
 			var errCallback = function(errMessage,errObject){
-				console.log(errMessage);
-				res.render('error.ejs',errMessage);
+				res.render('error.ejs',{
+					code:'500',
+					message:'Service Error:'+errMessage
+				});
 				//res.send(errObject);
 			}
 			var successCallback = function(files,tokens,authClient){

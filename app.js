@@ -6,7 +6,7 @@ var express = require('express'),
 http = require('http'),
 path = require('path'),
 favicons = require('connect-favicons'),
-serveIndex = require('serve-index'),
+//serveIndex = require('serve-index'),
 morgan = require('morgan'),
 bodyParser = require('body-parser'),
 methodOverride = require('method-override'),
@@ -29,25 +29,27 @@ var router = require('./server');
 var app = express();
 
 // all environments
-app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3003, "127.0.0.1");
+app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3003);
 app.set('ipaddress', process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1");
+app.set('pg',process.env.OPENSHIFT_POSTGRESQL_DB_URL || 'postgresql://127.0.0.1:5432');
 // config
 app.set('views', __dirname + '/client/view');
 app.set('view engine', 'ejs');
 app.engine('.html', require('ejs').renderFile);
+
 
 /*
 * Middleware Config
 */
 app.use(favicons(__dirname + '/client/img/icons'));
 //directory exposure to the public
-app.use(serveIndex(path.join(__dirname, '/client'), { icons:true }));
-app.use(serveIndex('/dropbox', '/Users/Melvrick/Dropbox'));
+//app.use(serveIndex(path.join(__dirname, '/client'), { icons:true }));
+//app.use(serveIndex('/dropbox', '/Users/Melvrick/Dropbox'));
 //logger. dev shows logs on req not resp
 app.use(morgan({format:'dev',immediate:true}));
 //setting input types of incoming details
 app.use(bodyParser.urlencoded({
-	extended:true //allows us to parse urlencoded data with qs library (false==querystring library)
+  extended:true //allows us to parse urlencoded data with qs library (false==querystring library)
 }));
 app.use(bodyParser.json());
 // use HTTP verbs such as PUT or DELETE in places where the client doesn't support it
@@ -59,7 +61,7 @@ app.use(cookieParser());
 app.use(session({
   store: new pgSession({
     pg : pg,
-    conString : 'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat'
+    conString : process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat'
   }),
   secret: process.env.FOO_COOKIE_SECRET || 'usHCpy7ndmuYy1cF3td7ytBV',//HMAC implementation for certifying modifications to the session's values
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
@@ -67,8 +69,8 @@ app.use(session({
 //flash middleware for helping to route data between requests through the flash object
 app.use(flash());
 /*var sess = {
-	secret: 'keyboard cat',
-	cookie: {}//below action for dev and production sets secure cookies to true
+  secret: 'keyboard cat',
+  cookie: {}//below action for dev and production sets secure cookies to true
 }
 app.use(session(sess));*/
 /*app.use(function(req, res, next){                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
@@ -89,20 +91,9 @@ app.use(express.static(path.join(__dirname, 'client/')));
 if ('development' == app.get('env')) {
   app.use(errorHandler({ dumpExceptions: true, showStack: true }));
 }else if (app.get('env') == 'production'){
-	app.set('trust proxy', 1) // trust first proxy, sitting behind a load balancer i.e. Nginx
+  app.set('trust proxy', 1) // trust first proxy, sitting behind a load balancer i.e. Nginx
   sess.cookie.secure = true // serve secure cookies
 }
-
-app.get("/*", function(req, res, next){
-
-    if(typeof req.cookies['connect.sid'] !== 'undefined'){
-        console.log(req.cookies['connect.sid']);
-        next(); // call the next middleware
-    }else{
-      req.session.error = 'Access denied!';                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-      res.redirect('/login');
-    }
-});
 
 //general ROUTER
 app.use('/', router.index);
@@ -121,7 +112,7 @@ app.use('/', router.index);
 
 // Run server
 http.createServer(app).listen(app.get('port'), app.get('ipaddress'),function(){
-  var dao = new pgDAO();
+  var dao = new pgDAO({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')});
   dao.initialize();
 
   console.log('Express server listening on port ' + app.get('port'));
