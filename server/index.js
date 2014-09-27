@@ -62,6 +62,10 @@ main_router.route('/login')
 		res.render('login.ejs');
 	});
 
+main_router.route('/testhome')
+	.all(function(req,res){
+		res.render('home.ejs');
+	});	
 main_router.route('/plain')
 	.all(function(req,res){
 		console.log('/plain request: ' + req);
