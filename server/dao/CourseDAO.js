@@ -3,6 +3,7 @@ var dao = new pgDAO({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||"postgres:/
 function CourseDAO(options){
 	this.TABLENAME = 'course',
 	this.EXERCISE_TABLE_NAME = 'exercises',
+	this.ADMIN_EXERCISE = 'adminexercise',
 	this.lessonMeta = {};
 
 	if (options){
@@ -50,6 +51,49 @@ CourseDAO.prototype.createCourseTable = function(callback){
 CourseDAO.prototype.createExerciseTable = function(callback){
 	var exerciseTableDetails = {
 		name:this.EXERCISE_TABLE_NAME,
+		pk:{
+			isGenerated:true,
+			name:'id',
+			type:'INTEGER'
+		},
+		attributes:[
+			{
+				name:'lessonid',
+				type:'VARCHAR(10)',
+				isCompulsory:true
+			},{
+				name:'name',
+				type:'VARCHAR(200)',
+				isCompulsory:true
+			},{
+				name:'url',
+				type:'VARCHAR(200)',
+				isCompulsory:true
+			},{
+				name:'link',
+				type:'VARCHAR(400)',
+				isCompulsory:true
+			},{
+				name:'masterid',
+				type:'VARCHAR(100)',
+				isCompulsory:true
+			}//delimited by a <xx> tag
+		]
+	};
+
+	dao.createTable(exerciseTableDetails,function(isSuccess,result){
+		setTimeout(function(){
+			dao.checkTableExists(exerciseTableDetails.name,function(isSuccess,result){
+				console.log('Exercise table creation is > ' + isSuccess);
+				callback(isSuccess,result);
+	      	});
+		},2000);
+	});
+}
+
+CourseDAO.prototype.createAdminExerciseTable = function(callback){
+	var exerciseTableDetails = {
+		name:this.ADMIN_EXERCISE,
 		pk:{
 			isGenerated:true,
 			name:'id',
@@ -222,6 +266,41 @@ CourseDAO.prototype.checkExerciseExistsURL = function(exercisePattern,callback){
 			callback(true);//selected length >= 1
 		}else{
 			callback(false);//selected length is 0 or less
+		}
+	});
+}
+
+CourseDAO.prototype.getAllAdminExercises = function(callback){
+	var selectExerciseDetails = {
+		name:this.ADMIN_EXERCISE,
+		distinct:false,
+		attributes:['id','name','url','masterid','lessonid','link']
+	};
+	dao.select(selectExerciseDetails,function(isSuccess,result){
+		if (result.length >= 1){
+			callback(true,result);//selected length >= 1
+		}else{
+			callback(false);//selected length is 0 or less
+		}
+	});
+}
+
+CourseDAO.prototype.insertNewAdminExercises = function(exercises,callback){
+	var exerciseExtracts = this.extractExerciseDetails(exercises);
+	var newExerciseDetails = {
+		name:this.ADMIN_EXERCISE,
+		attributes:[{name:'lessonid',type:'string'},
+			{name:'name',type:'string'},
+			{name:'url',type:'string'},
+			{name:'link',type:'string'},
+			{name:'masterid',type:'string'}],
+		values:exerciseExtracts
+	};
+	dao.checkTableExists(this.ADMIN_EXERCISE,function(exists,result){
+		if (exists){
+			dao.insert(newExerciseDetails,function(isSuccess,result){
+				callback(isSuccess,result);
+			});
 		}
 	});
 }

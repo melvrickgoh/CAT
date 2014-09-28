@@ -12,6 +12,10 @@ function FileController(options){
 	this.files = undefined;
 }
 
+FileController.prototype.getCourseDAO = function(){
+	return courseDAO;
+}
+
 FileController.prototype.loadInFiles = function(jsonFileList,callback){
 	//Process and loadfiles into memory
 	var filesArray = jsonFileList.items,
@@ -62,6 +66,13 @@ FileController.prototype.loadInFiles = function(jsonFileList,callback){
 	asyncOngoing = false;
 	lastIteration = true;
 	endFunction(lessons);
+}
+
+FileController.prototype.bootstrapAdminFiles = function(filesMeta){
+	courseDAO.insertNewAdminExercises(filesMeta,function(isSuccess,result){
+		console.log(isSuccess);
+		console.log(result);
+	});
 }
 
 FileController.prototype.validateFileTitle = function(title){

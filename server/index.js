@@ -128,7 +128,56 @@ main_router.route('/service')
 					});
 				}
 				var successCallback = function(files,tokens,authClient){
-					res.render('administrator-dashboard.ejs',{files:files.items, googleDelete:gSvcs.deleteServiceFile});
+					var courseDAO = fController.getCourseDAO();
+					courseDAO.getAllAdminExercises(function(isSuccess,results){
+						var adminFiles = [], nonAdminFiles = [];
+						if(isSuccess){
+							var extractAdminIDs = function(array){
+								var resultArr = [];
+								for (var k = 0; k<array.length; k++){
+									resultArr.push(array[k].masterid);
+								}
+								return resultArr;
+							},
+							adminIDs = extractAdminIDs(results);
+							var filesToReturn = files.items;
+							for(var i =0; i<filesToReturn.length; i++){
+								var file = filesToReturn[i];
+								if (adminIDs.indexOf(file.id)>-1){
+									file.administratorFile = true;
+									adminFiles.push(file);
+								}else{
+									file.administratorFile = false;
+									nonAdminFiles.push(file);
+								}
+							}
+							res.render('administrator-dashboard.ejs',{files:files.items, googleDelete:gSvcs.deleteServiceFile, adminFiles:adminFiles, nonAdminFiles:nonAdminFiles});
+						}
+					});
+					/*
+					-----PREVIOUSLY USED TO BOOTSTRAP ADMIN FILES DB-----
+					var serviceFiles = files.items;
+					var adminFiles = [];
+					for (var i = 0; i<serviceFiles.length; i++){
+						var serviceItem = serviceFiles[i];
+						var fileValidation = fController.validateFileTitle(serviceItem.title);
+
+						if (fileValidation.result){
+							serviceItem.exerciseTitle = fileValidation.title;
+							adminFiles.push({
+								lesson:fileValidation.lesson,
+								exercise:fileValidation.exercise,
+								exerciseTitle:fileValidation.title,
+								alternateLink:serviceItem.alternateLink,
+								lessonid:fileValidation.lesson,
+								id:serviceItem.id,
+								urlPattern:fController.validateURLPattern(serviceItem)
+							});
+						}
+					}
+					console.log(adminFiles);
+					fController.bootstrapAdminFiles(adminFiles);
+					*/
 				}
 				gSvcs.listServiceAccountFiles(successCallback,errCallback);
 			},'service');
@@ -176,21 +225,27 @@ main_router.route('/service/ws/files')
 					successes = [],
 					counter = 0;
 					var superCallback = function(){
+						console.log('super return called');
 						res.json({success:true,errors:errors,successes:successes});
 					}
 					for (var i = 0; i<postedResults.length; i++){
 						var filemeta = postedResults[i],
 						fileid = filemeta.fileid;
-						
+						console.log(filemeta);
+
 						switch(filemeta.permission){
 							case 'owner':
 								gSvcs.deleteServiceFile(fileid,function(err,success){
 									counter++;
+									console.log('owner success > ' + counter);
+									console.log(success);
+									successes.push(success.file);
 									if (counter == postedResults.length){
 										superCallback();
 									}
 								},function(message,err){
 									counter++;
+									console.log('owner error > ' + counter);
 									if (counter == postedResults.length){
 										superCallback();
 									}
@@ -199,11 +254,16 @@ main_router.route('/service/ws/files')
 							case 'editor':
 								gSvcs.removeServiceFilePermissions(fileid,function(err,success){
 									counter++;
+									console.log('editor success > ' + counter);
+									console.log(success);
+									successes.push(success.file);
 									if (counter == postedResults.length){
 										superCallback();
 									}
 								},function(message,err){
 									counter++;
+									console.log(message,err);
+									console.log('editor error > ' + counter);
 									if (counter == postedResults.length){
 										superCallback();
 									}
@@ -267,7 +327,7 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 						exerciseTitle = exercise.exerciseTitle,
 						exerciseURLPattern = validateExerciseTitle(exerciseTitle);
 
-						if (exerciseURLPattern==lessonname){
+						if (exerciseURLPattern.indexOf(lessonname)>-1){
 							return {lesson:lesson,exercise:exercise};
 						}
                 	}
@@ -275,7 +335,9 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 				return null;
 			},
 			captureAndRenderExercises = function(systemFiles){
+				console.log(lessonname);
 				var wantedFile = captureFile(systemFiles,lessonname);
+				console.log(wantedFile);
 				if (wantedFile==null){
 					res.render('error.ejs',{
 						code:'500',

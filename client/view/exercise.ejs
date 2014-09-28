@@ -60,6 +60,7 @@
                   return urlPattern;
                 }
                 var sysFilesKeys = Object.keys(systemFiles);
+                console.log(sysFilesKeys.length);
                 sysFilesKeys.forEach(function(lessonKey){
                   var sysLesson = systemFiles[lessonKey];
                   var sysLessonExerciseKeys = Object.keys(sysLesson);
@@ -171,12 +172,14 @@
         }
         xhr.onreadystatechange=function(){
         if (xhr.readyState==4 && xhr.status==200){
-            console.log(xhr.responseText);
             var response = JSON.parse(xhr.responseText);
+            console.log(response);
             if(response.success){
+              console.log(response.alternateLink);
               $('#googledocs').src = response.alternateLink;
             }else{
               //handle errors here
+              console.log('wtf errors!');
             }
           }
         }

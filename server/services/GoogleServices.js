@@ -213,7 +213,6 @@ GoogleServices.prototype.copyServiceDriveFileServiceAuth = function(fileId,newNa
 GoogleServices.prototype.copyServiceDriveFile = function(fileId,newName,user,callback){
 	var authClient = user.serviceAuthClient;
 	_executeCommand(authClient,function(client,oauth2Client){
-		//console.log(JSON.stringify(client));
 		_copyServiceFile(client,oauth2Client,fileId,newName,callback);
 	});
 }
@@ -378,17 +377,70 @@ GoogleServices.prototype.deleteServiceFile = function(id,successCallback,errorCa
 	    errorCallback('Error authorizing account in authClient (Service account)',err);
 	    return;
 	  }
-	  //console.log(client.drive);
-	  // Successfully authorize account
-	  // Make an authorized request to list Drive files.
-	  client.drive.files.delete({fileId:id}).withAuthClient(authClient).execute(function(err, success) {
-	  		if (err) {
-	  			console.log(err);
-			    errorCallback('Error accessing files with authClient (GoogleSvcs BACKEND FUNCTION: Service Account)',err);
-			    return;
-			}
-	  		successCallback(err,success);
-		});
+
+	  var retrieveGTempCredentials = function(response){
+	  	var permissions = response.items;
+	  	if (permissions.length>1){
+	  		var svcPermission, secondaryPermission;
+	  		for (var i in permissions){
+		  		var indPermission = permissions[i];
+		  		console.log(indPermission);
+		  		if (indPermission.domain=='developer.gserviceaccount.com'){
+		  			svcPermission = indPermission;
+		  		}else{
+		  			secondaryPermission = indPermission;
+		  		}
+		  	}
+	  		return {type:'multiple',service:svcPermission,secondary:secondaryPermission}
+	  	}else{
+	  		return {type:'single',permission:permissions[0]}
+	  	}
+	  }
+
+	  _getServicePermissions(id,errorCallback,function(response){
+	  	var serviceResults = retrieveGTempCredentials(response);
+	  	if (serviceResults.type == 'single'){
+	  		var serviceCredentials = serviceResults.permission;
+	  		_deleteServiceFile(id,function(err,response){
+	  			errorCallback('Could not remove permissions',err);
+	  		},function(err,response){
+	  			if (!response){
+	  				response = {file:id}
+	  			}else{
+	  				response.file = id;
+	  			}
+	  			successCallback(err,response);
+	  		});
+	  	}else{
+	  		var serviceCredentials = serviceResults.service,
+	  		secondaryCredentials = serviceResults.secondary;
+	  		console.log('multi file permissions');
+	  		if (serviceCredentials.role == 'owner'){
+	  			//upgrade secondary n remove urself
+	  			_upgradeOtherUserToOwner(id,secondaryCredentials.id,function(err,success){
+	  				if (success){
+			  			success.file = id;
+	  					successCallback(err,success);
+	  				}else{
+	  					console.log(err);
+	  					errorCallback('Could not handle upgrading other user error',err);
+	  				}
+	  			});
+	  		}else{
+	  			_removeServiceFilePermission(id,serviceCredentials.id,function(err,response){
+	  				console.log(err);
+		  			errorCallback('Could not remove permissions',err);
+		  		},function(err,response){
+		  			if (!response){
+		  				response = {file:id}
+		  			}else{
+		  				response.file = id;
+		  			}
+		  			successCallback(err,response);
+		  		});
+	  		}
+	  	}
+	  });
 	}
 	_serviceAccountExecution(authClientCallback);
 }
@@ -416,13 +468,74 @@ GoogleServices.prototype.removeServiceFilePermissions = function(fileid,successC
 	  	if(serviceCredentials!=null){
 	  		// Successfully authorize account
 			// Make an authorized request to list Drive files.
-		  	client.drive.permissions.delete({fileId:fileid,permissionId:serviceCredentials.id}).withAuthClient(authClient).execute(function(err, success) {
-		  		successCallback(err,success);
-			});
+			console.log('called the svc file removal ');
+			_removeServiceFilePermission(fileid,serviceCredentials.id,errorCallback,successCallback);
+		  	//client.drive.permissions.delete({fileId:fileid,permissionId:serviceCredentials.id}).withAuthClient(authClient).execute(function(err, success) {
+		  		//successCallback(err,success);
+			//});
 	  	}else{
 	  		errorCallback('No service credentials found',err);
 	  	}
 	  });
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+function _removeServiceFilePermission(fileid,permissionid,errorCallback,successCallback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    errorCallback('Error authorizing account in authClient (Service account)',err);
+	    return;
+	  }
+	  // Successfully authorize account
+	  // Make an authorized request to list Drive files.
+	  client.drive.permissions.delete({fileId:fileid,permissionId:permissionid}).withAuthClient(authClient).execute(function(err,response) {
+	  		if (err){
+	  			errorCallback(err,response);
+	  		}else{
+	  			successCallback(err,response);
+	  		}
+		});
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+function _deleteServiceFile(fileid,errorCallback,successCallback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    errorCallback('Error authorizing account in authClient (Service account)',err);
+	    return;
+	  }
+	  // Successfully authorize account
+	  // Make an authorized request to list Drive files.
+	  client.drive.files.delete({fileId:fileid}).withAuthClient(authClient).execute(function(err,response) {
+	  		if (err){
+	  			errorCallback(err,response);
+	  		}else{
+	  			successCallback(err,response);
+	  		}
+		});
+	}
+	_serviceAccountExecution(authClientCallback);
+}
+
+function _upgradeOtherUserToOwner(fileid,permissionid,callback){
+	var authClientCallback = function(err, tokens, client, authClient) {
+	  if (err) {
+	    errorCallback('Error authorizing account in authClient (Service account)',err);
+	    return;
+	  }
+	  // Successfully authorize account
+	  // Make an authorized request to upgeade Drive files permission.
+	  client.drive.permissions.update({
+	  		fileId:fileid,
+	  		permissionId:permissionid,
+	  		transferOwnership:true
+	  	},{
+	  		role:'owner'
+	  	}).withAuthClient(authClient).execute(function(err, success) {
+	  		callback(err,success);
+	  	});
 	}
 	_serviceAccountExecution(authClientCallback);
 }
