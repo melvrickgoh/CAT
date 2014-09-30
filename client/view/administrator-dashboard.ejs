@@ -48,7 +48,7 @@
                 Admin Dashboard
               </li>
               <li><a id="allfilesdata-label" style="cursor:pointer; background: rgba(255,255,255,0.2); color: #fff;" onClick="hideSection('all')">All Files</a></li>
-              <li><a id="adminfilesdata-label" onClick="hideSection('admin')">Manage Admin Files</a></li>
+              <li><a id="adminfilesdata-label" style="cursor:pointer;" onClick="hideSection('admin')">Manage Admin Files</a></li>
           </ul>
       </div>
       <!-- /#sidebar-wrapper -->
@@ -102,9 +102,9 @@
                 </table>
               </div>
 
-              <div id="adminfilesdata" style="display:none;">
+              <div id="adminfilesdata" >
                 <h2>Admin Files</h2>
-                <table cellspacing="0" width="75%" class="table table-striped table-bordered" id="admin-files">
+                <table cellspacing="0" width="75%" class="table table-striped table-bordered" id="adminfiles">
                   <thead>
                     <tr>
                       <th>File</th>
@@ -122,9 +122,6 @@
                       }
                       %>
                         <tr id="row-<%=file.id%>">
-                          <td>
-                            <input type="checkbox" class="delete-files-group" value="<%=file.id%>-----<%=permissionType%>">
-                          </td>
                           <td><%=file.title%></td>
                           <td>
                             <button class="btn btn-primary" data-title="View data" data-toggle="modal" data-target="#<%=file.id%>">
@@ -132,7 +129,7 @@
                             </button>
                           </td>
                           <td>
-                            <button class="btn btn-warning" data-title="Remove Access" data-toggle="modal" data-target="">
+                            <button class="btn btn-warning" data-title="Remove Access" data-toggle="modal" data-target="#<%=file.id%>-admin-remove-circulation">
                               Remove from Circulation
                             </button>
                           </td>
@@ -142,9 +139,9 @@
                 </table>
               </div>
 
-              <div id="nonadminfilesdata" style="display:none;">
+              <div id="nonadminfilesdata" >
                 <h2>Non-Admin Files</h2>
-                <table cellspacing="0" width="75%" class="table table-striped table-bordered" id="non-admin-files">
+                <table cellspacing="0" width="75%" class="table table-striped table-bordered" id="nonadminfiles">
                   <thead>
                     <tr>
                       <th>File</th>
@@ -161,10 +158,7 @@
                         permissionType = 'owner';
                       }
                       %>
-                        <tr id="row-<%=file.id%>">
-                          <td>
-                            <input type="checkbox" class="delete-files-group" value="<%=file.id%>-----<%=permissionType%>">
-                          </td>
+                        <tr id="rowNA-<%=file.id%>">
                           <td><%=file.title%></td>
                           <td>
                             <button class="btn btn-primary" data-title="View data" data-toggle="modal" data-target="#<%=file.id%>">
@@ -172,7 +166,7 @@
                             </button>
                           </td>
                           <td>
-                            <button class="btn btn-warning" data-title="Remove Access" data-toggle="modal" data-target="">
+                            <button class="btn btn-warning" data-title="Remove Access" data-toggle="modal" data-target="#<%=file.id%>-admin-add-circulation">
                               Add to Admin Circulation
                             </button>
                           </td>
@@ -247,6 +241,78 @@
                     </div>
                   </div>
                 </div>
+
+                <%if(file.administratorFile){%>
+                  <!-- ADMINISTRATOR MODAL 
+                    merely removal of files from circulation. do the backend user removal infuture, update the lesson and exercise changes, update the custom messages within email
+                    for removal of files from circulation, consider notification to users impacted by this removal
+                  -->
+
+                  <!-- MODAL FOR REMOVING FROM CIRCULATION-->
+                  <div class="modal fade" id="<%=file.id%>-admin-remove-circulation" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                          <h4 class="modal-title" id="myModalLabel">Remove File from System Circulation</h4>
+                        </div>
+                        <div class="modal-body">
+                          <p>Remove this file '<%=file.title%>' from system and students circulation?</p>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                          <button type="button" class="btn btn-warning" onClick="adminCirculation('<%=file.id%>','remove')">Remove from Circulation</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <%}else{%>
+                  <!-- NON-ADMINISTRATOR MODAL 
+                    user supplies exercise n lesson values, custom message in email when user copies it
+                  -->
+                    <div class="modal fade" id="<%=file.id%>-admin-add-circulation" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                          <h4 class="modal-title" id="myModalLabel">Add File to System Circulation</h4>
+                        </div>
+                        <div class="modal-body">
+                          <p>Add this file '<%=file.title%>' to system and students circulation?</p>
+                          <form role="form">
+                            <div class="form-group">
+                              <label for="<%=file.id%>-adminformname">File Name</label>
+                              <input type="text" class="form-control" id="<%=file.id%>-adminformname" placeholder="Enter name" onkeyup="updateAdminInputURL('<%=file.id%>-adminformname','<%=file.id%>-adminformurl')" value="<%=file.title%>">
+                              <p class="help-block">(At least 5 characters)</p>
+                              <p class="help-block">Lesson name is what you want your students to see in the app. URL is affected by this too</p>
+                            </div>
+                            </br>
+                            <div class="form-group">
+                              <label for="<%=file.id%>-adminformurl">URL of Exercise</label>
+                              <input type="text" class="form-control" id="<%=file.id%>-adminformurl" placeholder="URL of Exercise" value="<%=file.title.replace(/\s+/g, '')%>" disabled>
+                              <p class="help-block">The URL students can use to access their exercise</p>
+                            </div>
+                            <div class="form-group">
+                              <label for="<%=file.id%>-adminformlink">Link to Exercise</label>
+                              <input type="text" class="form-control" id="<%=file.id%>-adminformlink" placeholder="Google Link of Exercise" value="<%=file.alternateLink%>" disabled>
+                            </div>
+                            <div class="form-group">
+                              <label for="exampleInputFile">Lesson Number</label>
+                              <input type="number" min="1" max="20" step="1" id="<%=file.id%>-lessonnumber">
+                              <label for="exampleInputFile">Exercise Number</label>
+                              <input type="number" min="1" max="20" step="1" id="<%=file.id%>-exercisenumber">
+                              <p class="help-block">Lesson refers to which lesson the exercise belongs to, Exercise refers to which exercise this is to be classified as. Together, they form the ID</p>
+                            </div>
+                          </form>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                          <button type="button" class="btn btn-warning" onClick="adminCirculation('<%=file.id%>','add')">Add to Circulation</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <%}%>
               <%}%>
           </div>
       </div>
@@ -262,12 +328,44 @@
     <script type="text/javascript" charset="utf-8" language="javascript" src="../js/dataTables.bootstrap.js"></script>
     <script src="../bootstrap/js/bootstrap.min.js"></script>
     <script>
+      <%
+        var adminMessage = '',
+        infoArrKeys = Object.keys(adminInfo.array);
+        for (var k = 0; k<infoArrKeys.length; k++){
+          var object = adminInfo.array[infoArrKeys[k]];
+          adminMessage+=parseInt(object.lesson)+'.'+parseInt(object.exercise)+',';
+        }
+        adminMessage = adminMessage.substring(0,adminMessage.length-1);
+      %>
+      var processAdminInfo = function(stringMessage){
+        var lessonCodes = stringMessage.split(','),
+        result = {};
+        for (var i = 0; i<lessonCodes.length; i++){
+          var section = lessonCodes[i].split('.');
+          if (result[parseInt(section[0])]){
+            result[parseInt(section[0])].push(parseInt(section[1]));
+          }else{
+            result[parseInt(section[0])] = [parseInt(section[1])];
+          }
+        }
+        return result;
+      }
+
+      var ADMININFO = '<%=adminMessage%>'.split(',');//processAdminInfo('<%=adminMessage%>');
+
       var GLOBALTABLE,ADMINTABLE,NOADMINTABLE;
       $(document).ready(function() {
         GLOBALTABLE = $('#example').dataTable();
-        ADMINTABLE = $('#admin-files').dataTable();
-        NOADMINTABLE = $('#non-admin-files').dataTable();
+        ADMINTABLE = $('#adminfiles').dataTable();
+        NOADMINTABLE = $('#nonadminfiles').dataTable();
       });
+
+      var updateAdminInputURL = function(formInputID,targetInputID){
+        var input = document.getElementById(formInputID),
+        target = document.getElementById(targetInputID),
+        url = input.value.replace(/\s+/g, '');
+        $(target).val(url);
+      }
 
       var hideSection = function(value){
         var fileDataElement = document.getElementById('allfilesdata'),
@@ -318,6 +416,23 @@
 
       }
 
+      var XHR = function(connType,address,callback){
+        var xhr;
+        if(window.XMLHttpRequest){
+          xhr = new XMLHttpRequest();
+        }else{
+          xhr = new ActiveXObject('Microsoft.XMLHTTP');
+        }
+        xhr.open(connType, address, true);
+        xhr.onreadystatechange = function() {
+          if(xhr.readyState == 4 && xhr.status==200){
+            callback(xhr.responseText);
+          }
+        };
+
+        xhr.send();
+      }
+
       var bulkDelete = function(){
         var selectedForFilesDelete = $('.delete-files-group'),
         selection = [];
@@ -359,34 +474,93 @@
       }
 
       var serviceDelete =function(id){
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', '/service/ws/files?delete='+id, true);
-          xhr.onreadystatechange = function() {
-              if(xhr.readyState == 4 && xhr.status==200){
-                var jsonResponse = JSON.parse(xhr.responseText);
-                alert(xhr.responseText);
-              }
-          };
+        XHR('GET','/service/ws/files?delete='+id,function(responseText){
+          var jsonResponse = JSON.parse(responseText);
+              alert(xhr.responseText);
+        });
+      }
 
-          xhr.send();
+      var servicePermission =function(id,permissionType){
+        XHR('GET','/service/ws/files?permission='+id+'&permissionType='+permissionType,function(responseText){
+          var jsonResponse = JSON.parse(responseText);
+          var row = $('#row-'+id);
+          var table = $('#example').DataTable();
+          table.rows(row).remove().draw();
+          $('#'+id+'-permission').modal('hide');
+        });
+      }
+
+      var processValidationAddAdminFile = function(fileName,fileURL,lessonNo,exerciseNo){
+        var errors = [];
+        if (fileName.length<5){
+          errors.push('File name needs to be at least 5 characters long');
         }
 
-        var servicePermission =function(id,permissionType){
-          var xhr = new XMLHttpRequest();
-          xhr.open('GET', '/service/ws/files?permission='+id+'&permissionType='+permissionType, true);
-          xhr.onreadystatechange = function() {
-            if(xhr.readyState == 4 && xhr.status==200){
-              var jsonResponse = JSON.parse(xhr.responseText);
-              var row = $('#row-'+id);
-              //var table = $('#example').DataTable();
-              var table = $('#example').DataTable();
-              table.rows(row).remove().draw();
-              $('#'+id+'-permission').modal('hide');
+        if (lessonNo.length == 0){
+          errors.push('Please fill in the lesson number');
+        }else{
+          if(isNaN(lessonNo)){
+            errors.push('Please key in a number for the lesson');
+          }
+        }
+
+        if (exerciseNo.length == 0){
+          errors.push('Please fill in the exercise number');
+        }else{
+          if(isNaN(exerciseNo)){
+            errors.push('Please key in a number for the exercise');
+          }else{
+            var lesson = parseInt(lessonNo),
+            exercise = parseInt(exerciseNo);
+            if(ADMININFO.indexOf(lesson+'.'+exercise)>-1){
+              errors.push('This exercise already exists. Key in another exercise number');
             }
-          };
-
-          xhr.send();
+          }
         }
+
+        return errors;
+      }
+
+      var adminCirculation = function(fileid,action){
+        switch(action){
+          case 'remove':
+            
+            break;
+          case 'add':
+            var fileName = $('#'+fileid+'-adminformname').val(),
+            fileURL = $('#'+fileid+'-adminformurl').val(),
+            lessonNo = $('#'+fileid+'-lessonnumber').val(),
+            exerciseNo = $('#'+fileid+'-exercisenumber').val(),
+            link = $('#'+fileid+'-adminformlink').val(),
+            valuesArr=['File Name:\t'+fileName,'File URL:\t'+fileURL,'Lesson:\t'+lessonNo,'Exercise:\t'+exerciseNo];
+
+            var errors = processValidationAddAdminFile(fileName,fileURL,lessonNo,exerciseNo);
+            if (errors.length != 0){
+              alert('ERROR!\n\n-\t'+errors.join('\n-\t')+'\n\nPlease rectify these errors before continuing');
+            }else{
+              var agree = confirm('Confirm Add File to Circulation?\n\n-\t'+valuesArr.join('\n-\t'));
+              if (agree){
+                XHR('GET','/service/ws/admin?add='+fileid+'&name='+fileName+'&url='+fileURL+'&lesson='+parseInt(lessonNo)+'&exercise='+parseInt(exerciseNo)+'&link='+link,function(responseText){
+                  var result = JSON.parse(responseText);
+                  if (result.success){
+                    //add to admin
+                    location.reload();//LAW, consider doing some sort of async updates here. for the modal too
+                    /*var atable = $('#adminfiles').DataTable();
+                    atable.row.add()
+                    //removal
+                    var natable = $('#nonadminfiles').DataTable(),
+                    narow = $('#rowNA-'+fileid);
+                    natable.rows(narow).remove().draw();*/
+                  }else{
+                    alert('ERROR!\n\n-\t'+result.message);
+                  }
+                });
+              }
+            }
+            break;
+          default:
+        }
+      }
     </script>
   </body>
 </html>

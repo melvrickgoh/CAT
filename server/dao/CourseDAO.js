@@ -305,6 +305,21 @@ CourseDAO.prototype.insertNewAdminExercises = function(exercises,callback){
 	});
 }
 
+CourseDAO.prototype.removeAdminExercise = function(fileid,callback){
+	var removeFileDetails = {
+      name:this.ADMIN_EXERCISE,
+      conditions:['masterid = \''+ fileid +'\''],
+      otherTable: {
+        isUsed: false,
+        commonAttribute: 'helloworld',
+        select: {}
+      }
+    };
+    dao.delete(removeFileDetails,function(isSuccess,result){
+    	callback(isSuccess,result);
+    });
+}
+
 CourseDAO.prototype.insertNewExercises = function(exercises,callback){
 	var exerciseExtracts = this.extractExerciseDetails(exercises);
 	var newExerciseDetails = {

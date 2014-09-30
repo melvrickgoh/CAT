@@ -133,25 +133,33 @@ main_router.route('/service')
 						var adminFiles = [], nonAdminFiles = [];
 						if(isSuccess){
 							var extractAdminIDs = function(array){
-								var resultArr = [];
+								var resultArr = {},resultIDs = [];
 								for (var k = 0; k<array.length; k++){
-									resultArr.push(array[k].masterid);
+									var dbResult = array[k],
+									lessonID = dbResult.lessonid.split('.');
+									resultIDs.push(dbResult.masterid);
+									resultArr[dbResult.masterid]={lesson:lessonID[0],exercise:lessonID[1],title:dbResult.name,url:dbResult.url};
 								}
-								return resultArr;
+								return {ids:resultIDs,array:resultArr};
 							},
-							adminIDs = extractAdminIDs(results);
+							adminInfo = extractAdminIDs(results);
 							var filesToReturn = files.items;
 							for(var i =0; i<filesToReturn.length; i++){
 								var file = filesToReturn[i];
-								if (adminIDs.indexOf(file.id)>-1){
+								if (adminInfo.ids.indexOf(file.id)>-1){
 									file.administratorFile = true;
+									var dbInfo = adminInfo.array[file.id];
+									file.lesson = dbInfo.lesson;
+									file.exercise = dbInfo.exercise;
+									file.exerciseTitle = dbInfo.title;
+									file.exerciseURL = dbInfo.url;
 									adminFiles.push(file);
 								}else{
 									file.administratorFile = false;
 									nonAdminFiles.push(file);
 								}
 							}
-							res.render('administrator-dashboard.ejs',{files:files.items, googleDelete:gSvcs.deleteServiceFile, adminFiles:adminFiles, nonAdminFiles:nonAdminFiles});
+							res.render('administrator-dashboard.ejs',{files:files.items, adminInfo:adminInfo, adminFiles:adminFiles, nonAdminFiles:nonAdminFiles});
 						}
 					});
 					/*
@@ -182,6 +190,50 @@ main_router.route('/service')
 				gSvcs.listServiceAccountFiles(successCallback,errCallback);
 			},'service');
 		},'service');
+	});
+
+main_router.route('/service/ws/admin')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			_restrictServiceAdmin(req,res,function(user){
+				gSvcs = new GoogleServices();
+				if (req.query.remove){
+					var fileID = req.query.remove;
+					var errCallback = function(errMessage,errObject){
+						res.json({error:true,message:errMessage});
+					}
+
+					var successCallback = function(err,success){
+						res.json({error:false,message:success});
+					}
+					fController.removeAdminFileFromCirculation(fileID,successCallback,errCallback);
+					//remove service file from circulation
+				}else if(req.query.add){
+					var fileID = req.query.add,
+					fileName = req.query.name,
+					fileURL = req.query.url,
+					lesson = parseInt(req.query.lesson),
+					exercise = parseInt(req.query.exercise),
+					link = req.query.link;
+
+					fController.addAdminFileToCirculation({
+						lesson : lesson+'.'+exercise,
+						exerciseTitle : fileName,
+						urlPattern : fileURL,
+						alternateLink : link,
+						id : fileID
+					},function(isSuccess,results){
+						if(isSuccess){
+							res.json({success:true,message:'Insertion successful'});
+						}else{
+							res.json({success:false,message:'Insertion failed'});
+						}
+					});
+				}else{
+					res.json({error:true,message:'Invalid Web Service Call'});
+				}
+			},'serviceWS');
+		},'serviceWS');
 	});
 
 main_router.route('/service/ws/files')

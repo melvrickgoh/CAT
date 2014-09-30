@@ -106,4 +106,23 @@ FileController.prototype.updateUserFileDB = function(record,callback){
 	ufDAO.insertNewRecord(record,callback);
 }
 
+FileController.prototype.removeAdminFileFromCirculation = function(fileid,successCallback,errorCallback){
+	courseDAO.removeAdminExercise(fileid,function(isSuccess,result){
+		if(isSuccess){
+			//successfully deleted
+			if (result >= 1){
+				successCallback('No error','File successfully removed from the database');
+			}else{
+				errorCallback('File not found in database',result);
+			}
+		}else{
+			errorCallback('Error occurred in accessing pg database',result);
+		}
+	});
+}
+
+FileController.prototype.addAdminFileToCirculation = function(options,callback){
+	courseDAO.insertNewAdminExercises([options],callback);
+}
+
 module.exports = FileController;
