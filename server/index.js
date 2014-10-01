@@ -229,6 +229,22 @@ main_router.route('/service/ws/admin')
 							res.json({success:false,message:'Insertion failed'});
 						}
 					});
+				}else if (req.query.update){
+					var fileID = req.query.update,
+					lesson = req.query.lesson,
+					exercise = req.query.exercise;
+
+					fController.updateAdminFile({
+						id:fileID,
+						lesson:lesson,
+						exercise:exercise
+					},function(isSuccess,result){
+						if(isSuccess){
+							res.json({success:true,message:result});
+						}else{//2 reasons for failure. LessonID taken by another user (since frontend caters to your session). Unable to update the row itself (maybe row no longer exists etc)
+							res.json({success:false,message:result});
+						}
+					});
 				}else{
 					res.json({error:true,message:'Invalid Web Service Call'});
 				}

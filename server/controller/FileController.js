@@ -125,4 +125,16 @@ FileController.prototype.addAdminFileToCirculation = function(options,callback){
 	courseDAO.insertNewAdminExercises([options],callback);
 }
 
+FileController.prototype.updateAdminFile = function(adminExerciseInfo,callback){
+	courseDAO.checkAdminExerciseExistsLessonID(adminExerciseInfo.lesson+'.'+adminExerciseInfo.exercise,function(isSuccess,results){
+		if(isSuccess){//means there's already an existing lessonid, you cannot replace it
+			callback(false,'This lesson-exercise combination has just been taken. Pick another!');
+		}else{
+			courseDAO.updateAdminExercise(adminExerciseInfo,function(isSuccess,results){
+				callback(isSuccess,results);
+			});
+		}
+	});
+}
+
 module.exports = FileController;

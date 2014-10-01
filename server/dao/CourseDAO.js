@@ -320,6 +320,41 @@ CourseDAO.prototype.removeAdminExercise = function(fileid,callback){
     });
 }
 
+CourseDAO.prototype.checkAdminExerciseExistsLessonID = function(lessonID,callback){
+	var selectExerciseDetails = {
+		name:this.ADMIN_EXERCISE,
+		distinct:false,
+		attributes:['lessonid'],
+		conditions:['lessonid = \''+ lessonID +'\'']
+	};
+	dao.select(selectExerciseDetails,function(isSuccess,result){
+		if (result.length >= 1){
+			callback(true,result);//selected length >= 1
+		}else{
+			callback(false,result);//selected length is 0 or less
+		}
+	});
+}
+
+CourseDAO.prototype.updateAdminExercise = function(adminExercise,callback){
+	var updateAdminExerciseDetails = {
+		name:this.ADMIN_EXERCISE,
+		values:[{
+			name:'lessonid',
+			type:'string',
+			value:adminExercise.lesson+'.'+adminExercise.exercise
+		}],
+		conditions:['masterid = \'' + adminExercise.id + '\'']
+	}
+	dao.update(updateAdminExerciseDetails,function(isSuccess,result){
+		if (result.rowCount >= 1){
+			callback(true,result);//selected length >= 1
+		}else{
+			callback(false,result);//selected length is 0 or less
+		}
+	});
+}
+
 CourseDAO.prototype.insertNewExercises = function(exercises,callback){
 	var exerciseExtracts = this.extractExerciseDetails(exercises);
 	var newExerciseDetails = {

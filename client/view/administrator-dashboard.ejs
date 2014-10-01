@@ -124,8 +124,8 @@
                         <tr id="row-<%=file.id%>">
                           <td><%=file.title%></td>
                           <td>
-                            <button class="btn btn-primary" data-title="View data" data-toggle="modal" data-target="#<%=file.id%>">
-                              View Data
+                            <button class="btn btn-primary" data-title="View data" data-toggle="modal" data-target="#<%=file.id%>-admin-update-circulation">
+                              View/Update System Info
                             </button>
                           </td>
                           <td>
@@ -232,6 +232,7 @@
                             permissionType = 'owner';
                           }
                         %>
+
                         <p>Remove this file '<%=file.title%>' from your list?</p>
                       </div>
                       <div class="modal-footer">
@@ -258,6 +259,7 @@
                         </div>
                         <div class="modal-body">
                           <p>Remove this file '<%=file.title%>' from system and students circulation?</p>
+                          <p><b>IMPORTANT!</b> Students will no longer be able to access their copies of this file upon removal</p>
                         </div>
                         <div class="modal-footer">
                           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -266,6 +268,46 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- MODAL FOR UPDATING ADMIN FILE WITHIN CIRCULATION -->
+                  <div class="modal fade" id="<%=file.id%>-admin-update-circulation" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                          <h4 class="modal-title" id="myModalLabel">View/Update Admin File Data</h4>
+                        </div>
+                        <div class="modal-body">
+                          <form role="form">
+                            <div class="form-group">
+                              <label for="<%=file.id%>-adminformupdatename">File Name</label>
+                              <input type="text" class="form-control" id="<%=file.id%>-adminformupdatename" value="<%=file.exerciseTitle%>" disabled>
+                            </div>
+                            <div class="form-group">
+                              <label for="<%=file.id%>-adminformurl">Exercise URL Pattern</label>
+                              <input type="text" class="form-control" id="<%=file.id%>-adminformupdateurl" value="<%=file.exerciseURL%>" disabled>
+                            </div>
+                            <div class="form-group">
+                              <label for="<%=file.id%>-adminformupdatelink">Exercise Link</label>
+                              <input type="text" class="form-control" id="<%=file.id%>-adminformupdatelink" value="<%=file.alternateLink%>" disabled>
+                            </div>
+                            <div class="form-group">
+                              <label for="exampleInputFile">Lesson Number</label>
+                              <input type="number" min="1" max="20" step="1" value="<%=file.lesson%>" id="<%=file.id%>-adminformupdatelessonnumber">
+                              <label for="exampleInputFile">Exercise Number</label>
+                              <input type="number" min="1" max="20" step="1" value="<%=file.exercise%>" id="<%=file.id%>-adminformupdateexercisenumber">
+                              <p class="help-block">Lesson refers to which lesson the exercise belongs to, Exercise refers to which exercise this is to be classified as. Together, they form the ID</p>
+                            </div>
+                          </form>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                          <button type="button" class="btn btn-warning" onClick="adminCirculation('<%=file.id%>','update')">Update</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 <%}else{%>
                   <!-- NON-ADMINISTRATOR MODAL 
                     user supplies exercise n lesson values, custom message in email when user copies it
@@ -275,10 +317,10 @@
                       <div class="modal-content">
                         <div class="modal-header">
                           <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                          <h4 class="modal-title" id="myModalLabel">Add File to System Circulation</h4>
+                          <h4 class="modal-title" id="myModalLabel">Add File:<%=file.title%> to System Circulation</h4>
                         </div>
                         <div class="modal-body">
-                          <p>Add this file '<%=file.title%>' to system and students circulation?</p>
+                          <p><b>IMPORTANT!</b> You may assign the title and URL of the exercise only <b>ONCE</b> to preserve the students/users' experience in using the application</p>
                           <form role="form">
                             <div class="form-group">
                               <label for="<%=file.id%>-adminformname">File Name</label>
@@ -492,11 +534,11 @@
 
       var processValidationAddAdminFile = function(fileName,fileURL,lessonNo,exerciseNo){
         var errors = [];
-        if (fileName.length<5){
+        if (fileName.trim().length<5){
           errors.push('File name needs to be at least 5 characters long');
         }
 
-        if (lessonNo.length == 0){
+        if (lessonNo.trim().length == 0){
           errors.push('Please fill in the lesson number');
         }else{
           if(isNaN(lessonNo)){
@@ -504,7 +546,7 @@
           }
         }
 
-        if (exerciseNo.length == 0){
+        if (exerciseNo.trim().length == 0){
           errors.push('Please fill in the exercise number');
         }else{
           if(isNaN(exerciseNo)){
@@ -521,10 +563,61 @@
         return errors;
       }
 
+      var processValidationUpdateAdminFile = function(lessonNo,exerciseNo){
+        var errors = [];
+        if(lessonNo.trim().length == 0){
+          errors.push('Please fill in the lesson number');
+        }
+
+        if (exerciseNo.trim().length == 0){
+          errors.push('Please fill in the exercise number');
+        }else{
+          if(isNaN(exerciseNo)){
+            errors.push('Please key in a number for the exercise');
+          }else{
+            var lesson = parseInt(lessonNo),
+            exercise = parseInt(exerciseNo);
+            if(ADMININFO.indexOf(lesson+'.'+exercise)>-1){
+              errors.push('This exercise already exists. Key in another exercise number');
+            }
+          }
+        }
+        return errors;
+      }
+
       var adminCirculation = function(fileid,action){
         switch(action){
           case 'remove':
-            
+            XHR('GET','/service/ws/admin?remove='+fileid,function(responseText){
+              var json = JSON.parse(responseText);
+              if (json.error){
+                alert('ERROR!\n\n-\t'+json.message);
+              }
+              location.reload();
+            });
+            break;
+          case 'update':
+            var lessonNo = $('#'+fileid+'-adminformupdatelessonnumber').val(),
+            exerciseNo = $('#'+fileid+'-adminformupdateexercisenumber').val(),
+            fileName = $('#'+fileid+'-adminformupdatename').val(),
+            valuesArr = ['Lesson:\t'+lessonNo,'Exercise:\t'+exerciseNo];
+
+            var errors = processValidationUpdateAdminFile(lessonNo,exerciseNo);
+
+            if (errors.length != 0){
+              alert('ERROR!\n\n-\t'+errors.join('\n-\t')+'\n\nPlease rectify these errors before continuing');
+            }else{
+              var agree = confirm('Confirm update File:'+fileName+' to Circulation?\n\n-\t'+valuesArr.join('\n-\t'));
+              if(agree){
+                XHR('GET','/service/ws/admin?update='+fileid+'&lesson='+parseInt(lessonNo)+'&exercise='+parseInt(exerciseNo),function(responseText){
+                  var json = JSON.parse(responseText);
+                  if(!json.success){
+                    alert('ERROR!\n\n-\t'+JSON.stringify(json.message)+'\n\nWe will now reload the application');
+                  }
+                  location.reload();
+                });
+              }
+            }
             break;
           case 'add':
             var fileName = $('#'+fileid+'-adminformname').val(),
@@ -538,7 +631,7 @@
             if (errors.length != 0){
               alert('ERROR!\n\n-\t'+errors.join('\n-\t')+'\n\nPlease rectify these errors before continuing');
             }else{
-              var agree = confirm('Confirm Add File to Circulation?\n\n-\t'+valuesArr.join('\n-\t'));
+              var agree = confirm('Confirm Add File:'+fileName+' to Circulation?\n\n-\t'+valuesArr.join('\n-\t'));
               if (agree){
                 XHR('GET','/service/ws/admin?add='+fileid+'&name='+fileName+'&url='+fileURL+'&lesson='+parseInt(lessonNo)+'&exercise='+parseInt(exerciseNo)+'&link='+link,function(responseText){
                   var result = JSON.parse(responseText);
@@ -552,7 +645,7 @@
                     narow = $('#rowNA-'+fileid);
                     natable.rows(narow).remove().draw();*/
                   }else{
-                    alert('ERROR!\n\n-\t'+result.message);
+                    alert('ERROR!\n\n-\t'+result.message+'\n\nWe will now reload the application');
                   }
                 });
               }
