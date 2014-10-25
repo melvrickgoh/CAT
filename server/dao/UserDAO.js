@@ -1,5 +1,16 @@
 var pgDAO = require('./index');
 var dao = new pgDAO({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||"postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat")});
+var ID = 'id',
+	NAME = 'givenname',
+	EMAIL = 'email',
+	USERNAME = 'emailusername',
+	GENDER = 'gender',
+	LAST_VISIT = 'lastvisit',
+	REFRESH_TOKEN = 'refreshtoken',
+	YEAR = 'year',
+	SEM = 'semester',
+	SECTION = 'section',
+	ROLE = 'role';
 function UserDAO(options){
 	if (options){
 		dao = new pgDAO({pgURL:options.pgURL})
@@ -7,38 +18,58 @@ function UserDAO(options){
 	this.TABLENAME = 'users';
 }
 
+UserDAO.prototype.getVariables = function(){
+	return [ID,NAME,EMAIL,USERNAME,GENDER,LAST_VISIT,REFRESH_TOKEN,YEAR,SEM,SECTION,ROLE];
+}
+
 UserDAO.prototype.createUserTable = function(){
 	var userDetails = {
 		name:this.TABLENAME,
 		pk:{
 			isGenerated:false,
-			name:'id',
+			name:ID,
 			type:'VARCHAR(50)'
 		},
 		attributes:[
 			{
-				name:'givenName',
+				name:NAME,
 				type:'VARCHAR(100)',
 				isCompulsory:false
 			},{
-				name:'email',
+				name:EMAIL,
 				type:'VARCHAR(250)',
 				isCompulsory:true
 			},{
-				name:'emailusername',
+				name:USERNAME,
 				type:'VARCHAR(150)',
 				isCompulsory:true
 			},{
-				name:'gender',
+				name:GENDER,
 				type:'VARCHAR(20)',
 				isCompulsory:true
 			},{
-				name:'lastVisit',
+				name:LAST_VISIT,
 				type:'BIGINT',
 				isCompulsory:false
 			},{
-				name:'refreshToken',
+				name:REFRESH_TOKEN,
 				type:'VARCHAR(50)',
+				isCompulsory:false
+			},{
+				name:ROLE,
+				type:'VARCHAR(100)',
+				isCompulsory:false
+			},{
+				name:YEAR,
+				type:'integer',
+				isCompulsory:false
+			},{
+				name:SEM,
+				type:'integer',
+				isCompulsory:false
+			},{
+				name:SECTION,
+				type:'VARCHAR(10)',
 				isCompulsory:false
 			}
 		]
@@ -59,15 +90,31 @@ UserDAO.prototype.insertNewUser = function(user,callback){
 
 UserDAO.prototype.insertNewUsers = function(users,callback){
 	var userExtracts = this.extractUsersDetails(users);
+	userExtracts.role = 'student';
 	var newUserDetails = {
 		name:this.TABLENAME,
 		attributes:[{name:'id',type:'string'},{name:'givenName',type:'string'},{name:'emailusername',type:'string'},
 			{name:'email',type:'string'},{name:'gender',type:'string'},{name:'lastVisit',type:'BIGINT'},
-			{name:'refreshToken',type:'string'}],
+			{name:'refreshToken',type:'string'},{name:'role',type:'string'}],
 		values:userExtracts
 	};
 	dao.insert(newUserDetails,function(isSuccess,result){
 		callback(isSuccess,result);
+	});
+}
+
+UserDAO.prototype.getAllUsers = function(callback){
+	var selectUserDetails = {
+		name:this.TABLENAME,
+		distinct:false,
+		attributes:this.getVariables()
+	};
+	dao.select(selectUserDetails,function(isSuccess,result){
+		if (result.length >= 1){
+			callback(true,result);//selected length >= 1
+		}else{
+			callback(false);//selected length is 0 or less
+		}
 	});
 }
 
@@ -97,6 +144,43 @@ UserDAO.prototype.checkUserExists = function(user,callback){
 	};
 	dao.select(selectUserDetails,function(isSuccess,result){
 		if (result.length >= 1){
+			callback(true);//selected length >= 1
+		}else{
+			callback(false);//selected length is 0 or less
+		}
+	});
+}
+
+UserDAO.prototype.checkUserAdministrator = function(user,callback){
+	var selectUserDetails = {
+		name:this.TABLENAME,
+		distinct:false,
+		attributes:['id','role'],
+		conditions:['id = \''+ user.id +'\'']
+	};
+	dao.select(selectUserDetails,function(isSuccess,result){
+		if (result.length >= 1){
+			callback(true,result);//selected length >= 1
+		}else{
+			callback(false);//selected length is 0 or less
+		}
+	});
+}
+
+UserDAO.prototype.updateUserRole = function(options,callback){
+	var id = options.id,
+	role = options.role;
+	var updateUserDetails = {
+		name:this.TABLENAME,
+		values:[{
+			name:ROLE,
+			type:'string',
+			value:role
+		}],
+		conditions:['id = \'' + id + '\'']
+	}
+	dao.update(updateUserDetails,function(isSuccess,result){
+		if (result.rowCount >= 1){
 			callback(true);//selected length >= 1
 		}else{
 			callback(false);//selected length is 0 or less

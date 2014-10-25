@@ -1,0 +1,517 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Melvrick Goh">
+    <link rel="icon" href="../img/favicon.png">
+
+    <title>Service | User Management</title>
+
+    <!-- Bootstrap core CSS -->
+    <!--link href="../bootstrap/css/bootstrap.min.css" rel="stylesheet"-->
+    <link href="../stylesheets/simple-sidebar.css" rel="stylesheet">
+    <link href="../stylesheets/bootstrap.css" rel="stylesheet">
+    <link href="../stylesheets/datepicker.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../stylesheets/dataTables.bootstrap.css">
+    <!-- CSS to style the file input field as button and adjust the Bootstrap progress bars -->
+    <link rel="stylesheet" href="../stylesheets/jquery.fileupload.css">
+    <!-- CSS adjustments for browsers with JavaScript disabled -->
+    <noscript><link rel="stylesheet" href="../stylesheets/jquery.fileupload-noscript.css"></noscript>
+    <!-- This is a very simple parallax effect achieved by simple CSS 3 multiple backgrounds, made by http://twitter.com/msurguy -->
+
+
+  </head>
+
+  <body>
+    <nav class="navbar navbar-default" style="z-index:1001" role="navigation">
+     <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" 
+           data-target="#example-navbar-collapse">
+           <span class="sr-only">Toggle navigation</span>
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+           <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/lessons">Administration</a>
+     </div>
+     <div class="collapse navbar-collapse" id="example-navbar-collapse">
+        <ul class="nav navbar-nav">
+           <li><a href="/mydrive">My Drive</a></li>
+           <li class="active"><a href="/lessons">Lessons</a></li>
+        </ul>
+     </div>
+    </nav>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <div id="sidebar-wrapper" style="margin-top:-60px">
+          <ul class="sidebar-nav" style="margin-top:60px">
+              <li class="sidebar-brand" style="background: rgba(255,255,255,0.2); color: #fff;">
+                Users
+              </li>
+              <li><a id="allfilesdata-label" style="cursor:pointer; background: rgba(255,255,255,0.2); color: #fff;">All Students</a></li>
+              <li class="sidebar-brand">
+                <a href="/service">Lessons</a>
+              </li>
+          </ul>
+      </div>
+      <!-- /#sidebar-wrapper -->
+
+      <!-- Page Content -->
+      <div id="page-content-wrapper">
+          <div class="container-fluid">
+              <div class="container" style="margin-top: 10px">
+                <%
+                var lh = function(hours){
+                  if(hours < 10){
+                    return '0'+hours;
+                  }
+                  return hours;
+                }
+                var milliToDate = function(milliseconds){
+                  var date = new Date(milliseconds);
+                  return date.toDateString() + ' ' + lh(date.getHours()) + ':' + lh(date.getMinutes());
+                }
+
+                if(admins.length>0){%>
+                  <div id="administratorsdata">
+                    <h2>System Admins</h2>
+                    <table cellspacing="0" width="75%" class="table table-striped table-bordered" id="adminstable">
+                      <thead>
+                        <tr>
+                          <th>Name (Google)</th>
+                          <th>Email</th>
+                          <th>Email Username</th>
+                          <th>Last Session</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <%for(var i = 0; i<admins.length; i++){
+                          var admin = admins[i];
+                          var adminName = admin.givenname,
+                          adminEmail = admin.email,
+                          adminEmailUsername = admin.emailusername,
+                          adminLastVisit = milliToDate(parseInt(admin.lastvisit));
+                          %>
+                            <tr id="row-<%=admin.id%>">
+                              <td><%=adminName%></td>
+                              <td><%=adminEmail%></td>
+                              <td><%=adminEmailUsername%></td>
+                              <td><%=adminLastVisit%></td>
+                            </tr>
+                        <%}%>             
+                      </tbody>
+                    </table>
+                  </div>
+                <%}%>
+
+                <%if(assistants.length>0){%>
+                  <div id="assistantsdata">
+                    <h2>Teaching Assistants</h2>
+                    <table cellspacing="0" width="75%" class="table table-striped table-bordered" id="tastable">
+                      <thead>
+                        <tr>
+                          <th>Name (Google)</th>
+                          <th>Email</th>
+                          <th>Email Username</th>
+                          <th>Last Session</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <%for(var i = 0; i<assistants.length; i++){
+                          var ta = assistants[i];
+                          var taName = ta.givenname,
+                          taEmail = ta.email,
+                          taEmailUsername = ta.emailusername,
+                          taLastVisit = milliToDate(parseInt(ta.lastvisit));
+                          %>
+                            <tr id="row-<%=ta.id%>">
+                              <td><%=taName%></td>
+                              <td><%=taEmail%></td>
+                              <td><%=taEmailUsername%></td>
+                              <td><%=taLastVisit%></td>
+                            </tr>
+                        <%}%>             
+                      </tbody>
+                    </table>
+                  </div>
+                <%}%>
+
+                <%if(users.length>0){%>
+                  <div id="usersdata">
+                    <h2>Users</h2>
+                    <table cellspacing="0" width="75%" class="table table-striped table-bordered" id="userstable">
+                      <thead>
+                        <tr>
+                          <th>Action</th>
+                          <th>Name (Google)</th>
+                          <th>Email</th>
+                          <th>Email Username</th>
+                          <th>Last Session</th>
+                          <th>Year</th>
+                          <th>Semester</th>
+                          <th>Section</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <%for(var i = 0; i<users.length; i++){
+                          var user = users[i];
+                          var userName = user.givenname,
+                          userEmail = user.email,
+                          userEmailUsername = user.emailusername,
+                          userLastVisit = milliToDate(parseInt(user.lastvisit)),
+                          userYear = user.year,
+                          userSemester = user.semester,
+                          userSection = user.section;
+                          %>
+                            <tr id="row-<%=user.id%>">
+                              <td>
+                                <button class="btn" data-title="Edit" data-toggle="modal" data-target="#<%=user.id%>-edit" >
+                                  Edit
+                                </button>
+                              </td>
+                              <td><%=userName%></td>
+                              <td><%=userEmail%></td>
+                              <td><%=userEmailUsername%></td>
+                              <td><%=userLastVisit%></td>
+                              <td><%=userYear%></td>
+                              <td><%=userSemester%></td>
+                              <td><%=userSection%></td>
+                            </tr>
+                        <%}%>             
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <%for(var k = 0; k<users.length; k++){
+                    var user = users[k];
+                    %>
+                    <div class="modal fade" id="<%=user.id%>-edit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                      <div class="modal-dialog">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                            <h4 class="modal-title" id="myModalLabel"><%=user.email%></h4>
+                          </div>
+                          <div class="modal-body">
+                              <p><strong>Email Username: </strong><%=user.emailusername%></p>
+                              <p><strong>Given Name (Google): </strong><%=user.givenname%></p>
+                              <p><strong>Current Role: </strong><%=user.role%></p>
+                              <p><strong>Change Role: </strong>
+                                <select class="form-control" id="<%=user.id%>-user-role">
+                                  <option value="ta">Teaching Assistant</option>
+                                  <option value="admin">Administrator</option>
+                                </select>
+                              </p>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="submit" class="btn btn-default" onclick="editUserRole('<%=user.id%>')">Submit</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  <%}%>
+
+                <%}%>
+              </div>
+
+              <div id="studentrecords">
+                <h2>Student Records</h2>
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#uploadstudentfile">Upload Student File</button>
+                <div class="modal fade" id="uploadstudentfile" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Upload Student File</h4>
+                      </div>
+                      <div class="modal-body">
+                          <p>For uploading new student records, only .txt formats are accepted with only 1 student email per line</p>
+                          <form role="form" enctype="multipart/form-data" id="uploadSRForm" method="POST"><!-- action="/service/ws/students" -->
+                            <!--input id="lefile" data-show-upload="true" type="file" style="display:none"-->
+                            <div class="form-group input-append">
+                              <label for="uploadStudentRecordsFile">Upload New Student Records File</label>
+                              <input id="uploadStudentRecordsFile" class="form-control" type="text" placeholder="Enter File Location"disabled> <!-- onclick="$('input[id=lefile]').click();" onkeypress="$('input[id=lefile]').click();" -->
+                              <!-- The fileinput-button span is used to style the file input field as button -->
+                              </br>
+                              </br>
+                              <span class="btn btn-success fileinput-button">
+                                  <i class="glyphicon glyphicon-plus"></i>
+                                  <span>Select files</span>
+                                  <!-- The file input field used as target for the file upload widget -->
+                                  <input id="fileupload" type="file" name="files[]" multiple>
+                              </span>
+                            </div>
+                            <div class="form-group">
+                              <label for="uploadStudentRecordsSection">Section</label>
+                              <p>Max 10 Characters</p>
+                              <input type="text" class="form-control" id="uploadStudentRecordsSection" onkeypress="validateSectionLength('uploadStudentRecordsSection',10)" placeholder="Enter Section">
+                            </div>
+                            <div class="form-group">
+                              <label for="uploadStudentRecordsSemester">Semester</label>
+                              <select class="form-control" id="uploadStudentRecordsSemester">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                              </select>
+                            </div>
+                            <div class="form-group">
+                              <label for="uploadStudentRecordsYear">Year</label>
+                              <select class="form-control" id="uploadStudentRecordsYear">
+                                <option value="2011">2011</option>
+                                <option value="2012">2012</option>
+                                <option value="2013">2013</option>
+                                <option value="2014">2014</option>
+                                <option value="2015">2015</option>
+                                <option value="2016">2016</option>
+                                <option value="2017">2017</option>
+                                <option value="2018">2018</option>
+                                <option value="2019">2019</option>
+                                <option value="2020">2020</option>
+                              </select>
+                            </div>
+                            <br>
+                            <br>
+                            <br>
+                            <!-- The global progress bar -->
+                            <div id="progress" class="progress">
+                                <div class="progress-bar progress-bar-success"></div>
+                            </div>
+                            <!-- The container for the uploaded files -->
+                            <div id="files" class="files"></div>
+
+                            <button type="submit" id="studentRecordsSubmit" class="btn btn-default">Submit</button>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                          </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                  <!--END UPLOAD STUDENT FILE MODAL -->
+                  <%if(studentRecords.length>0){%>
+                    <div id="studentrecordsdata">
+                      <table cellspacing="0" width="75%" class="table table-striped table-bordered" id="studentrecordstable">
+                        <thead>
+                          <tr>
+                            <th>Email</th>
+                            <th>Section</th>
+                            <th>Year</th>
+                            <th>Semester</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <%for(var i = 0; i<studentRecords.length; i++){
+                            var sr = studentRecords[i];
+                            var srEmail = sr.email,
+                            srSection = sr.section,
+                            srYear = sr.year,
+                            srSemester = sr.semester;
+                            %>
+                              <tr id="row-<%=sr.id%>">
+                                <td><%=srEmail%></td>
+                                <td><%=srSection%></td>
+                                <td><%=srYear%></td>
+                                <td><%=srSemester%></td>
+                              </tr>
+                          <%}%>             
+                        </tbody>
+                      </table>
+                    </div>
+                  <%}%>
+                </div>
+              </div>
+          </div>
+      </div>
+      <!-- /#page-content-wrapper -->
+
+  </div>
+
+    <!-- Bootstrap core JavaScript <script src="../../assets/js/docs.min.js"></script>
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="../js/jquery.ui.widget.js"></script>
+    
+    <script src="../js/jquery.iframe-transport.js"></script>
+    <!-- The basic File Upload plugin -->
+    <script src="../js/jquery.fileupload.js"></script>
+   
+    <script type="text/javascript" language="javascript" src="../js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" charset="utf-8" language="javascript" src="../js/dataTables.bootstrap.js"></script>
+    <script type="text/javascript" charset="utf-8" language="javascript" src="../bootstrap/js/bootstrap-datepicker.js"></script>
+    <script src="../bootstrap/js/bootstrap.min.js"></script>
+    <script>
+    var ADMINTABLE, TA_TABLE,USER_TABLE;
+    $(document).ready(function() {
+      ADMINTABLE = $('#adminstable').dataTable();
+      TA_TABLE = $('#tastable').dataTable();
+      USER_TABLE = $('#userstable').dataTable();
+      SR_TABLE = $('#studentrecordstable').dataTable();
+      $('input[id=lefile]').change(function() {
+      $('#uploadStudentRecordsFile').val($(this).val());
+      });
+    });
+
+    $(function () {
+      'use strict';
+      // Change this to the location of your server-side upload handler:
+      var url = window.location.hostname === 'blueimp.github.io' ?
+                  '//jquery-file-upload.appspot.com/' : 'server/php/';
+      $('#uploadSRForm').fileupload({
+          url: '/service/ws/students',
+          dataType: 'json',
+          change: function (e, data) {
+            $.each(data.files, function (index, file) {
+              document.getElementById('uploadStudentRecordsFile').value = file.name;
+              console.log(document.getElementById('uploadStudentRecordsFile'));
+            });
+          },
+          add: function (e, data) {
+            data.context = $('#studentRecordsSubmit')
+              .click(function () {
+                  console.log(data);
+                  data.context = $('<p/>').text('Uploading Student Records...').replaceAll($(this));
+                  data.submit();
+              });
+          },
+          done: function (e, data) {
+              $.each(data.result.files, function (index, file) {
+                data.context = $('<p/>').text('Done').replaceAll($(this));
+                $('<p/>').text(file.name).appendTo('#files');
+              });
+          },
+          progressall: function (e, data) {
+              var progress = parseInt(data.loaded / data.total * 100, 10);
+              $('#progress .progress-bar').css(
+                'width',
+                progress + '%'
+              );
+          }
+      }).prop('disabled', !$.support.fileInput)
+          .parent().addClass($.support.fileInput ? undefined : 'disabled');
+  });
+
+  $('#uploadSRForm').bind('fileuploadsubmit', function (e, data) {
+    var canContinue = true,
+    errors = [],
+    srFileName = $(document.getElementById('uploadStudentRecordsFile')),
+    srSection = $(document.getElementById('uploadStudentRecordsSection')),
+    srSemester = $(document.getElementById('uploadStudentRecordsSemester')),
+    srYear = $(document.getElementById('uploadStudentRecordsYear'));
+    if(srSection[0].value.trim().length==0){
+      canContinue = false;
+      errors.push('Please enter section details');
+    }
+
+    if(srFileName[0].value){
+      if (srFileName[0].value.trim().length==0){
+        canContinue = false;
+        errors.push('Please upload the file');
+      }
+      
+      var splitArr = srFileName[0].value.split('.');
+      if(splitArr[splitArr.length-1]!='txt'){
+        canContinue = false;
+        errors.push('Please upload only a .txt file for records processing');
+      }
+    }
+
+    //data.formData = {example: input.val()};
+    if (!canContinue) {
+      data.context.find('button').prop('disabled', false);
+      alert('ERROR!\n\n-\t'+errors.join('\n-\t')+'\n\nPlease rectify these errors before continuing');
+      return false;
+    }else{
+      data.formData = {
+        section: srSection[0].value.trim(),
+        semester: srSemester[0].value,
+        year: srYear[0].value
+      };
+      console.log(data.formData);
+    }
+  });
+
+      var validateSectionLength = function(textID,length){
+        var textValue = $('#'+textID).val();
+        if (textValue.length>length) {
+          console.log($('#'+textID));
+          console.log(document.getElementById(textID));
+          $('#'+textID)[0].value = textValue.substring(0,length);
+          //document.getElementById(textID).innerHTML = textValue.substring(0,length);
+        }
+      }
+
+      var submitStudentFiles = function(){
+        console.log($('#lefile'));
+        console.log($('#uploadSRForm'));
+      }
+
+      var XHR = function(connType,address,callback){
+        var xhr;
+        if(window.XMLHttpRequest){
+          xhr = new XMLHttpRequest();
+        }else{
+          xhr = new ActiveXObject('Microsoft.XMLHTTP');
+        }
+        xhr.open(connType, address, true);
+        xhr.onreadystatechange = function() {
+          if(xhr.readyState == 4 && xhr.status==200){
+            callback(xhr.responseText);
+          }
+        };
+
+        xhr.send();
+      }
+
+      var editUserRole = function(userid){
+        var role = $('#'+userid+'-user-role')[0].selectedOptions[0].value;
+        var userChangeRow = $('#row-'+userid);
+        var cells = userChangeRow[0].cells;
+        var givenName = cells[1].textContent,
+        email = cells[2].textContent,
+        emailUsername = cells[3].textContent,
+        lastVisit = cells[4].textContent,
+        year = cells[5].textContent,
+        semester = cells[6].textContent,
+        section = cells[7].textContent;
+          
+        var xhr = new XHR('POST','/service/ws/users?userid='+userid+'&role='+role,function(response){
+            if(response){
+              var userTable = $('#userstable').DataTable();
+              var userChangeRow = $('#row-'+userid);
+
+              userTable.rows(userChangeRow).remove();
+              userTable.draw();
+
+              if (role=='admin'){
+                var adminTable = $('#adminstable').DataTable();
+                adminTable.row.add([
+                  givenName,
+                  email,
+                  emailUsername,
+                  lastVisit
+                  ]).draw();
+              }
+              if (role=='ta'){
+                var taTable = $('#tastable').DataTable();
+                taTable.row.add([
+                  givenName,
+                  email,
+                  emailUsername,
+                  lastVisit
+                  ]).draw();
+              }
+            }else{
+              alert('User upgrade encountered an error');
+            }
+          });
+      }
+
+
+
+    </script>
+  </body>
+</html>

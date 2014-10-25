@@ -9,6 +9,8 @@ UserController = require('./controller/UserController'),
 FileController = require('./controller/FileController'),
 GoogleServices = require('./services/GoogleServices'),
 express = require('express'),
+multiparty = require('multiparty'),
+Busboy = require('busboy'),
 main_router = express.Router();
 //svc acct pw: notasecret
 var readline = require('readline');
@@ -49,7 +51,8 @@ var prettyjson = require('prettyjson');
 
 var bootstrapper = new BootstrapManager({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')}),
 uController = new UserController({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')}),
-fController = new FileController({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')});
+fController = new FileController({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||'postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat')}),
+gSvcs = new GoogleServices();
 
 main_router.route('/')
 	.all(function(req,res){
@@ -101,26 +104,59 @@ main_router.route('/serviceadmin/login')
 			
 				var username = req.query.username,
 				password = req.query.password;
-
-				if (username == 'liverpool' && password == 'liverpool'){
-					console.log('login success');
-					user.svcAdmin = true;
-					res.redirect('/service');
-				}else{
-					console.log('login failure');
-					req.flash('servicelogin','Invalid login!');
-					req.flash('serviceloginusername',username);
-					res.redirect('/serviceadmin');
-				}
-			
+				uController.checkUserAdmin(user,function(isSuccess){
+					if (username == 'liverpool' && password == 'liverpool' && isSuccess){
+						user.svcAdmin = true;
+						res.redirect('/service');
+					}else{
+						req.flash('servicelogin','Invalid login!');
+						req.flash('serviceloginusername',username);
+						res.redirect('/serviceadmin');
+					}
+				});
 		},'serviceadmin');
+	});
+
+main_router.route('/service/students')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			_restrictServiceAdmin(req,res,function(user){
+				var errCallback = function(errMessage,errObject){
+					res.render('error.ejs',{
+						code:'500',
+						message:'Service Error:'+errMessage
+					});
+				}
+				var renderCallback = function(results){
+					res.render('administrator-userdashboard.ejs',results);
+				}
+				try{
+					uController.getAllUsers(function(isSuccess,results){
+						if(isSuccess){
+							uController.getAllStudentRecords(function(srSuccess,srResults){
+								if (srSuccess){
+									results.studentRecords = srResults;
+									renderCallback(results);
+								}else{
+									renderCallback({admins:[],users:[],assistants:[],studentRecords:[]});
+								}
+							});
+						}else{
+							renderCallback({admins:[],users:[],assistants:[],studentRecords:[]});
+						}
+					});
+				}catch(err){
+					errCallback('Error happened while retrieving users from database');
+				}
+			},'service');
+		},'service');
 	});
 
 main_router.route('/service')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
 			_restrictServiceAdmin(req,res,function(user){
-				gSvcs = new GoogleServices();
+				//gSvcs = new GoogleServices();
 				var errCallback = function(errMessage,errObject){
 					res.render('error.ejs',{
 						code:'500',
@@ -192,11 +228,64 @@ main_router.route('/service')
 		},'service');
 	});
 
+main_router.route('/service/ws/lessons')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			_restrictServiceAdmin(req,res,function(user){
+				
+			},'serviceWS');
+		},'serviceWS');
+	});
+
+main_router.route('/service/ws/students')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			_restrictServiceAdmin(req,res,function(user){
+				var busboy = new Busboy({ headers: req.headers });
+			    busboy.on('file', function(fieldname, file, filename, encoding, mimetype) {
+			      console.log('File [' + fieldname + ']: filename: ' + filename);
+			      file.on('data', function(data) {
+			        console.log('File [' + fieldname + '] got ' + data.length + ' bytes');
+			      });
+			      file.on('end', function() {
+			        console.log('File [' + fieldname + '] Finished');
+			      });
+			    });
+			    busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
+			      console.log('Field [' + fieldname + ']: value: ' + inspect(val));
+			    });
+			    busboy.on('finish', function() {
+			      console.log('Done parsing form!');
+			      res.writeHead(303, { Connection: 'close', Location: '/' });
+			      res.end();
+			    });
+			},'serviceWS');
+		},'serviceWS');
+	});
+
+main_router.route('/service/ws/users')
+	.all(function(req,res){
+		_restrict(req,res,function(user){
+			_restrictServiceAdmin(req,res,function(user){
+				if(req.query.userid){
+					var userID = req.query.userid,
+					role = req.query.role;
+					uController.changeUserRole(userID,role,function(isSuccess){
+						res.json(isSuccess);
+					});
+				}else{
+					console.log(req);
+					console.log(req.form);
+				}
+			},'serviceWS');
+		},'serviceWS');
+	});
+
 main_router.route('/service/ws/admin')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
 			_restrictServiceAdmin(req,res,function(user){
-				gSvcs = new GoogleServices();
+				//gSvcs = new GoogleServices();
 				if (req.query.remove){
 					var fileID = req.query.remove;
 					var errCallback = function(errMessage,errObject){
@@ -256,7 +345,7 @@ main_router.route('/service/ws/files')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
 			_restrictServiceAdmin(req,res,function(user){
-				gSvcs = new GoogleServices();
+				//gSvcs = new GoogleServices();
 				if (req.query.delete){
 					var fileID = req.query.delete;
 					var errCallback = function(errMessage,errObject){
@@ -377,7 +466,7 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 			lessonname = req.params.lessonname,
 			isCreate = req.params.create;
 
-			gSvcs = new GoogleServices();
+			//gSvcs = new GoogleServices();
 
 			var validateExerciseTitle = function(exerciseTitle){
           		return exerciseTitle.replace(/\s+/g, '');
@@ -516,7 +605,7 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 main_router.route('/lessons')
 	.all(function(req,res){
 		_restrict(req,res,function(user){
-			gSvcs = new GoogleServices();
+			//gSvcs = new GoogleServices();
 			//var data = req.flash('user');
 			var errCallback = function(errMessage,errObject){
 				res.render('error.ejs',{
@@ -549,7 +638,7 @@ main_router.route('/lessons')
 main_router.route('/home')
 	.all(function(req,res){
 
-		gSvcs = new GoogleServices();
+		//gSvcs = new GoogleServices();
 
 		var errCallback = function(errMessage,errObject){
 			console.log(errMessage);
@@ -568,7 +657,7 @@ main_router.route('/login-google')
 		//res.send('welcome to monkey');
 
 		// load google plus v1 API resources and methods
-		gSvcs = new GoogleServices();
+		//gSvcs = new GoogleServices();
 		gSvcs.login(res);
 	});
 
@@ -577,7 +666,7 @@ main_router.route('/login-google')
 main_router.route('/google/oauth2callback')
 	.all(function(req,res){
 		var code = req.query.code;
-  		gSvcs = new GoogleServices();
+  		//gSvcs = new GoogleServices();
 
   		//var authClient = gSvcs.getOAuthClient();
 
