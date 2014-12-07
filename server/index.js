@@ -599,7 +599,7 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 				console.log(userID);
 				console.log(lessonname);
 			}
-		},'exercise');
+		},'lessons/ws/create');
 	});
 
 main_router.route('/lessons')
@@ -772,6 +772,23 @@ main_router.route('/google/oauth2callback')
 	      				console.log('lessons called');
 	      				req.flash('target_locale',undefined);//reset given that you've logged in already
 	      				res.redirect('/lessons');
+	      				break;
+	      			case 'service':
+	      				console.log('service main page called');
+	      				req.flash('target_locale',undefined);//reset given that you've logged in already
+	      				res.redirect('/service');
+	      				break;
+	      			case 'serviceadmin':
+	      				console.log('service admin page called');
+	      				req.flash('target_locale',undefined);//reset given that you've logged in already
+	      				res.redirect('/serviceadmin');
+	      				break;
+	      			case 'lessons/ws/create':
+	      				//attempted access ws in an unauthorized manner
+	      				res.render('error.ejs',{
+							code:'404a',
+							message:'Service Error:File resource not found'
+						});
 	      				break;
 	      			default:
 	      				console.log('default flow called');

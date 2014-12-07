@@ -355,6 +355,21 @@ CourseDAO.prototype.updateAdminExercise = function(adminExercise,callback){
 	});
 }
 
+CourseDAO.prototype.getAllExercises = function(callback){
+	var selectExerciseDetails = {
+		name:this.EXERCISE_TABLE_NAME,
+		distinct:false,
+		attributes:['id','name','url','masterid','lessonid','link']
+	};
+	dao.select(selectExerciseDetails,function(isSuccess,result){
+		if (result.length >= 1){
+			callback(true,result);//selected length >= 1
+		}else{
+			callback(false);//selected length is 0 or less
+		}
+	});
+}
+
 CourseDAO.prototype.insertNewExercises = function(exercises,callback){
 	var exerciseExtracts = this.extractExerciseDetails(exercises);
 	var newExerciseDetails = {
