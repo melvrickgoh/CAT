@@ -492,9 +492,8 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 				return null;
 			},
 			captureAndRenderExercises = function(systemFiles){
-				console.log(lessonname);
 				var wantedFile = captureFile(systemFiles,lessonname);
-				console.log(wantedFile);
+				//console.log(wantedFile);
 				if (wantedFile==null){
 					res.render('error.ejs',{
 						code:'500',
@@ -578,6 +577,7 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 				//display call
 				if (user.systemFiles){
 					var systemFiles = user.systemFiles;
+					console.log('look for system files');
 					captureAndRenderExercises(systemFiles);
 				}else{
 					var errCallback = function(errMessage,errObject){
@@ -595,6 +595,7 @@ main_router.route('/lessons/:lessonname/:user_id/:create?')
 					}
 					gSvcs.listServiceAccountFiles(successCallback,errCallback);
 				}
+				console.log('Looking for file');
 				console.log(user.id);
 				console.log(userID);
 				console.log(lessonname);
