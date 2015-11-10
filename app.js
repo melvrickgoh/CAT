@@ -29,9 +29,9 @@ var router = require('./server');
 var app = express();
 
 // all environments
-app.set('port', process.env.OPENSHIFT_NODEJS_PORT || 3003);
+app.set('port', process.env.PORT || 3003);
 //app.set('ipaddress', process.env.OPENSHIFT_NODEJS_IP || "127.0.0.1");
-app.set('pg',process.env.OPENSHIFT_POSTGRESQL_DB_URL || 'postgresql://127.0.0.1:5432');
+//app.set('pg',process.env.OPENSHIFT_POSTGRESQL_DB_URL || 'postgresql://127.0.0.1:5432');
 // config
 app.set('views', __dirname + '/client/view');
 app.set('view engine', 'ejs');
