@@ -1,5 +1,5 @@
 var pgDAO = require('./index');
-var dao = new pgDAO({pgURL:(process.env.OPENSHIFT_POSTGRESQL_DB_URL||"postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat")});
+var dao = new pgDAO({pgURL:("postgres://tinrklywlxfrri:hk39mjf6cN-_rbsXRXWYjhD0Wc@ec2-107-21-223-147.compute-1.amazonaws.com:5432/d9vled6ah1g453")});
 var ID = 'id',
 	EMAIL = 'email',
 	SECTION = 'section',

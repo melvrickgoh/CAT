@@ -1,5 +1,5 @@
 var pg = require('pg.js'),
-conString = process.env.OPENSHIFT_POSTGRESQL_DB_URL||"postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat",
+conString = "postgres://tinrklywlxfrri:hk39mjf6cN-_rbsXRXWYjhD0Wc@ec2-107-21-223-147.compute-1.amazonaws.com:5432/d9vled6ah1g453",
 handleError;
 
 function pgDAO (options){
@@ -70,21 +70,28 @@ function pgDAO (options){
 pgDAO.prototype.constructor = pgDAO;
 
 pgDAO.prototype.initialize = function(){
-	this._setupDefaults();
+	//this._setupDefaults();
 	this._getDatabaseTablesInformation();
 }
 
 pgDAO.prototype.getConnection = function(queryObject,callback,errCallback){
 	// get a pg client from the connection pool
-  pg.connect(conString, function(err, client, done) {
-	try{
+  var client = new pg.Client({
+    user: "tinrklywlxfrri",
+    password: "hk39mjf6cN-_rbsXRXWYjhD0Wc",
+    database: "d9vled6ah1g453",
+    port: 5432,
+    host: "ec2-107-21-223-147.compute-1.amazonaws.com",
+    ssl: true
+	}); 
+	client.connect();
+
+  try{
 		client.query(queryObject,callback);
-		done();
 	}catch(err){
-		//errCallback(err);
-      	done(client);
+		//errCallback(err); 
+		console.log(err);
 	}
-  });
 }
 
 pgDAO.prototype.update = function(details,callback){
@@ -440,7 +447,7 @@ pgDAO.prototype._getDatabaseTablesInformation = function (){
 	
 	this.getConnection(queryString,function(err,result){
 		// handle an error from the query
-      	if(err) throw err;
+    if(err) throw err;
 	});
 }
 

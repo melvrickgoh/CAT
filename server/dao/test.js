@@ -1,9 +1,26 @@
 var http = require('http');
 var pg = require('pg.js');
 
-var conString = "postgres://adminedaruff:3nEF-3YgNmnW@127.0.0.1:5432/cat";
+var conString = "pg://tinrklywlxfrri:hk39mjf6cN-_rbsXRXWYjhD0Wc@ec2-107-21-223-147.compute-1.amazonaws.com:5432/d9vled6ah1g453";
 
 var server = http.createServer(function(req, res) {
+
+  var client = new pg.Client({
+    user: "tinrklywlxfrri",
+    password: "hk39mjf6cN-_rbsXRXWYjhD0Wc",
+    database: "d9vled6ah1g453",
+    port: 5432,
+    host: "ec2-107-21-223-147.compute-1.amazonaws.com",
+    ssl: true
+  }); 
+  client.connect();
+
+  try{
+    client.query(queryObject,callback);
+  }catch(err){
+    //errCallback(err); 
+    console.log(err);
+  }
 
   // get a pg client from the connection pool
   pg.connect(conString, function(err, client, done) {
