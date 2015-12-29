@@ -90,7 +90,6 @@ UserDAO.prototype.insertNewUser = function(user,callback){
 
 UserDAO.prototype.insertNewUsers = function(users,callback){
 	var userExtracts = this.extractUsersDetails(users);
-	userExtracts.role = 'student';
 	var newUserDetails = {
 		name:this.TABLENAME,
 		attributes:[{name:'id',type:'string'},{name:'givenName',type:'string'},{name:'emailusername',type:'string'},
@@ -122,6 +121,7 @@ UserDAO.prototype.extractUsersDetails = function(users){
 	var extract = [];
 	for (var i in users){
 		var user = users[i];
+
 		extract.push({
 			id:user.id,
 			givenName:user.name.givenName,
@@ -129,7 +129,8 @@ UserDAO.prototype.extractUsersDetails = function(users){
 			emailusername:user.emailUsername,
 			gender:user.gender,
 			lastVisit:user.lastVisit.getTime(),
-			refreshToken:user.refreshToken
+			refreshToken:user.refreshToken,
+			role:"student"
 		});
 	}
 	return extract;
@@ -198,7 +199,7 @@ UserDAO.prototype.updateUser = function(user,callback){
 		},{
 			name:'refreshToken',
 			type:'string',
-			value:user.refreshToken
+			value:user.refreshToken || user.authClient.credentials.refresh_token
 		}],
 		conditions:['id = \'' + user.id + '\'']
 	}

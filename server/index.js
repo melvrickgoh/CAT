@@ -56,12 +56,11 @@ gSvcs = new GoogleServices();
 
 main_router.route('/')
 	.all(function(req,res){
-		res.send('welcome to head');
+		res.redirect("/login");
 	});
 
 main_router.route('/login')
 	.all(function(req,res){
-		console.log('/login receiving request: ' + req);
 		res.render('login.ejs');
 	});
 
@@ -71,7 +70,6 @@ main_router.route('/testhome')
 	});	
 main_router.route('/plain')
 	.all(function(req,res){
-		console.log('/plain request: ' + req);
 		res.render('plain.ejs');
 	});
 
@@ -642,6 +640,7 @@ main_router.route('/home')
 		//gSvcs = new GoogleServices();
 
 		var errCallback = function(errMessage,errObject){
+			console.log('list svc account files errors');
 			console.log(errMessage);
 			res.send(errObject);
 		}
@@ -743,7 +742,7 @@ main_router.route('/google/oauth2callback')
 	      		req.session.user = loggedInUser; //set the session to that of this user
 	      		req.flash('user',loggedInUser);
 	      		var targetRedirect = req.flash('target_locale')[0];//use only the first element as the result
-	      		console.log(targetRedirect);
+	      		console.log("redirect path > " + targetRedirect);
 
 	      		//update user database on user details
 	      		uController.processLogin(loggedInUser,function(action,isSuccess,result){

@@ -1,5 +1,5 @@
 var pg = require('pg.js'),
-conString = "postgres://tinrklywlxfrri:hk39mjf6cN-_rbsXRXWYjhD0Wc@ec2-107-21-223-147.compute-1.amazonaws.com:5432/d9vled6ah1g453",
+conString = "postgres://tinrklywlxfrri:hk39mjf6cN-_rbsXRXWYjhD0Wc@ec2-107-21-223-147.compute-1.amazonaws.com:5432/d9vled6ah1g453?ssl=true",
 handleError;
 
 function pgDAO (options){
@@ -85,6 +85,8 @@ pgDAO.prototype.getConnection = function(queryObject,callback,errCallback){
     ssl: true
 	}); 
 	client.connect();
+
+	console.log(queryObject);
 
   try{
 		client.query(queryObject,callback);
@@ -285,6 +287,7 @@ pgDAO.prototype.generateInsertQuery = function(details){
 	for (var i in details.values){
 		var valueObj = details.values[i];
 		query+='('
+
 		for (var j in attrDeclaration){
 			var attr = attrDeclaration[j].name,
 			attrType = attrDeclaration[j].type;
@@ -300,6 +303,7 @@ pgDAO.prototype.generateInsertQuery = function(details){
 			query+='), '
 		}
 	}
+
 	return query;
 }
 

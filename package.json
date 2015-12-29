@@ -14,7 +14,7 @@
   "private": true,
   "main": "app.js",
   "scripts": {
-    "start": "node app.js --websocket-port=$OPENSHIFT_NODEJS_PORT --log-level=1"
+    "start": "node app.js --log-level=1"
   },
   "engines": {
     "node": ">= 0.10.0",

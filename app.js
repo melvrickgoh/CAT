@@ -61,9 +61,10 @@ app.use(cookieParser());
 app.use(session({
   store: new pgSession({
     pg : pg,
-    conString :'postgres://tinrklywlxfrri:hk39mjf6cN-_rbsXRXWYjhD0Wc@ec2-107-21-223-147.compute-1.amazonaws.com:5432/d9vled6ah1g453'
+    conString :'postgres://tinrklywlxfrri:hk39mjf6cN-_rbsXRXWYjhD0Wc@ec2-107-21-223-147.compute-1.amazonaws.com:5432/d9vled6ah1g453?ssl=true',
+    tableName : 'session'
   }),
-  secret: process.env.FOO_COOKIE_SECRET || 'usHCpy7ndmuYy1cF3td7ytBV',//HMAC implementation for certifying modifications to the session's values
+  secret: 'usHCpy7ndmuYy1cF3td7ytBV',//HMAC implementation for certifying modifications to the session's values
   cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
 }));
 //flash middleware for helping to route data between requests through the flash object
