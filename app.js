@@ -69,11 +69,11 @@ app.use(session({
 }));
 //flash middleware for helping to route data between requests through the flash object
 app.use(flash());
-/*var sess = {
+var sess = {
   secret: 'keyboard cat',
   cookie: {}//below action for dev and production sets secure cookies to true
 }
-app.use(session(sess));*/
+app.use(session(sess));
 /*app.use(function(req, res, next){                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
   var err = req.session.error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
     , msg = req.session.success;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
@@ -93,7 +93,7 @@ if ('development' == app.get('env')) {
   app.use(errorHandler({ dumpExceptions: true, showStack: true }));
 }else if (app.get('env') == 'production'){
   app.set('trust proxy', 1) // trust first proxy, sitting behind a load balancer i.e. Nginx
-  session.cookie.secure = true // serve secure cookies
+  sess.cookie.secure = true // serve secure cookies
 }
 
 //general ROUTER
