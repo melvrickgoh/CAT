@@ -93,7 +93,7 @@ if ('development' == app.get('env')) {
   app.use(errorHandler({ dumpExceptions: true, showStack: true }));
 }else if (app.get('env') == 'production'){
   app.set('trust proxy', 1) // trust first proxy, sitting behind a load balancer i.e. Nginx
-  sess.cookie.secure = true // serve secure cookies
+  session.cookie.secure = true // serve secure cookies
 }
 
 //general ROUTER
