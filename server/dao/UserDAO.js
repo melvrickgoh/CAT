@@ -201,10 +201,13 @@ UserDAO.prototype.updateUser = function(user,callback){
 			type:'string',
 			value:user.refreshToken || user.authClient.credentials.refresh_token
 		}],
-		conditions:['id = \'' + user.id + '\'']
+		conditions:['id = \'' + user.id + '\''],
+		returning: ['id','role','givenname']
 	}
 	dao.update(updateUserDetails,function(isSuccess,result){
 		if (result.rowCount >= 1){
+			updatedUserAttributes = result.rows[0];
+			user.role = updatedUserAttributes.role;
 			callback(true);//selected length >= 1
 		}else{
 			callback(false);//selected length is 0 or less

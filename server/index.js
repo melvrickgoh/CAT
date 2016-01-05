@@ -741,8 +741,8 @@ main_router.route('/google/oauth2callback')
 	      		loggedInUser.files = files;
 	      		req.session.user = loggedInUser; //set the session to that of this user
 	      		req.flash('user',loggedInUser);
-	      		var targetRedirect = req.flash('target_locale')[0];//use only the first element as the result
-	      		console.log("redirect path > " + targetRedirect);
+	      		var destinationPath = req.flash('target_locale')[0];//use only the first element as the result
+	      		console.log("redirect user to > " + destinationPath);
 
 	      		//update user database on user details
 	      		uController.processLogin(loggedInUser,function(action,isSuccess,result){
@@ -756,44 +756,8 @@ main_router.route('/google/oauth2callback')
 	      					break;
 	      				default:
 	      			}
+	      			_redirectLoggedInUser(req, res, destinationPath, loggedInUser);
 	      		});
-
-	      		switch(targetRedirect){
-	      			case 'mydrive':
-	      				console.log('my drive called');
-	      				/*console.log({
-			      			user:loggedInUser,
-			      			files:files
-			      		});*/
-						req.flash('target_locale',undefined);//reset given that user has alr logged in
-	      				res.redirect('/mydrive');
-	      				break;
-	      			case 'lessons':
-	      				console.log('lessons called');
-	      				req.flash('target_locale',undefined);//reset given that you've logged in already
-	      				res.redirect('/lessons');
-	      				break;
-	      			case 'service':
-	      				console.log('service main page called');
-	      				req.flash('target_locale',undefined);//reset given that you've logged in already
-	      				res.redirect('/service');
-	      				break;
-	      			case 'serviceadmin':
-	      				console.log('service admin page called');
-	      				req.flash('target_locale',undefined);//reset given that you've logged in already
-	      				res.redirect('/serviceadmin');
-	      				break;
-	      			case 'lessons/ws/create':
-	      				//attempted access ws in an unauthorized manner
-	      				res.render('error.ejs',{
-							code:'404a',
-							message:'Service Error:File resource not found'
-						});
-	      				break;
-	      			default:
-	      				console.log('default flow called');
-	      				res.redirect('/home');
-	      		}
 	      	}
 	      }
 	      
@@ -801,6 +765,44 @@ main_router.route('/google/oauth2callback')
 	});
 
 exports.index = main_router;
+
+function _redirectLoggedInUser(req, res, destinationPath, loggedInUser) {
+	switch(destinationPath){
+		case 'mydrive':
+			console.log('my drive called');
+			req.flash('target_locale',undefined);//reset given that user has alr logged in
+			res.redirect('/mydrive');
+			break;
+		case 'lessons':
+			console.log('lessons called');
+			req.flash('target_locale',undefined);//reset given that you've logged in already
+			res.redirect('/lessons');
+			break;
+		case 'service':
+			console.log('service main page called');
+			req.flash('target_locale',undefined);//reset given that you've logged in already
+			res.redirect('/service');
+			break;
+		case 'serviceadmin':
+			console.log('service admin page called');
+			req.flash('target_locale',undefined);//reset given that you've logged in already
+			res.redirect('/serviceadmin');
+			break;
+		case 'lessons/ws/create':
+			res.render('error.ejs',{
+				code:'404a',
+				message:'Service Error:File resource not found'
+			});
+			break;
+		default:
+			console.log('default flow called');
+			if (loggedInUser.role == 'admin') {
+				res.redirect('/service');
+			} else {
+				res.redirect('/home');
+			}
+	}
+}
 
 function _hello(req, res){
 	var mel = new User({

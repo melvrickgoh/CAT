@@ -26,7 +26,7 @@ a:hover {
 
 html,
 body {
-   background: url("../img/image1.png") no-repeat center center fixed;
+   background: url("https://s3-ap-southeast-1.amazonaws.com/cat.smu/images/login.background.jpg") no-repeat center center fixed;
     -webkit-background-size: cover; /* For WebKit*/
     -moz-background-size: cover;    /* Mozilla*/
     -o-background-size: cover;      /* Opera*/

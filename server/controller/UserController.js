@@ -13,8 +13,8 @@ UserController.prototype.processLogin = function(user,callback){
 	//If user exists, update the logtime, else insert new user into db
 	dao.checkUserExists(user,function(exists){
 		if (exists){
-			dao.updateUser(user,function(updated){
-				callback('Update User',updated);//to be updated on the dao being updated
+			dao.updateUser(user,function(isSuccess, result){
+				callback('Update User',isSuccess, result);//to be updated on the dao being updated
 			});
 			return;
 		}else{
