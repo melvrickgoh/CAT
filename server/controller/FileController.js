@@ -5,10 +5,8 @@ courseDAO,
 ufDAO;
 
 function FileController(options){
-	if (options){
-		courseDAO = new CourseDAO({pgURL:options.pgURL});
-		ufDAO = new UserFileDAO({pgURL:options.pgURL});
-	}
+	courseDAO = new CourseDAO();
+	ufDAO = new UserFileDAO();
 	this.files = undefined;
 }
 

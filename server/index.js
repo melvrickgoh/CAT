@@ -164,7 +164,9 @@ main_router.route('/service')
 				var successCallback = function(files,tokens,authClient){
 					var courseDAO = fController.getCourseDAO();
 					courseDAO.getAllAdminExercises(function(isSuccess,results){
-						var adminFiles = [], nonAdminFiles = [];
+						var adminFiles = [], 
+						nonAdminFiles = [],
+						adminInfo = { ids: [], array: {} };
 						if(isSuccess){
 							var extractAdminIDs = function(array){
 								var resultArr = {},resultIDs = [];
@@ -178,6 +180,7 @@ main_router.route('/service')
 							},
 							adminInfo = extractAdminIDs(results);
 							var filesToReturn = files.items;
+
 							for(var i =0; i<filesToReturn.length; i++){
 								var file = filesToReturn[i];
 								if (adminInfo.ids.indexOf(file.id)>-1){
@@ -193,8 +196,8 @@ main_router.route('/service')
 									nonAdminFiles.push(file);
 								}
 							}
-							res.render('administrator-dashboard.ejs',{files:files.items, adminInfo:adminInfo, adminFiles:adminFiles, nonAdminFiles:nonAdminFiles});
 						}
+						res.render('administrator-dashboard.ejs',{files:files.items, adminInfo:adminInfo, adminFiles:adminFiles, nonAdminFiles:nonAdminFiles});
 					});
 					/*
 					-----PREVIOUSLY USED TO BOOTSTRAP ADMIN FILES DB-----
@@ -392,7 +395,7 @@ main_router.route('/service/ws/files')
 							case 'owner':
 								gSvcs.deleteServiceFile(fileid,function(err,success){
 									counter++;
-									console.log('owner success > ' + counter);
+									console.log('switch student user to owner success > ' + counter);
 									console.log(success);
 									successes.push(success.file);
 									if (counter == postedResults.length){
@@ -400,7 +403,7 @@ main_router.route('/service/ws/files')
 									}
 								},function(message,err){
 									counter++;
-									console.log('owner error > ' + counter);
+									console.log('switch student user to owner error > ' + counter);
 									if (counter == postedResults.length){
 										superCallback();
 									}
@@ -409,16 +412,18 @@ main_router.route('/service/ws/files')
 							case 'editor':
 								gSvcs.removeServiceFilePermissions(fileid,function(err,success){
 									counter++;
-									console.log('editor success > ' + counter);
+									console.log('editor permission removed successfully > ' + counter);
 									console.log(success);
-									successes.push(success.file);
+									if (success) {
+										successes.push(success.file);
+									}
 									if (counter == postedResults.length){
 										superCallback();
 									}
 								},function(message,err){
 									counter++;
 									console.log(message,err);
-									console.log('editor error > ' + counter);
+									console.log('editor permission removal error > ' + counter);
 									if (counter == postedResults.length){
 										superCallback();
 									}

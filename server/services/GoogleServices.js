@@ -455,7 +455,7 @@ GoogleServices.prototype.removeServiceFilePermissions = function(fileid,successC
 	  	if(serviceCredentials!=null){
 	  		// Successfully authorize account
 			// Make an authorized request to list Drive files.
-			console.log('called the svc file removal ');
+			console.log('remove service file access to file');
 			_removeServiceFilePermission(fileid,serviceCredentials.id,errorCallback,successCallback);
 		  	//client.drive.permissions.delete({fileId:fileid,permissionId:serviceCredentials.id}).withAuthClient(authClient).execute(function(err, success) {
 		  		//successCallback(err,success);
