@@ -1,17 +1,13 @@
 var googleapis = require('../lib/googleapis');
 var OAuth2Client = googleapis.OAuth2Client;
-var CLIENT_ID = '614118273237-nogtgnp2dm5u9ruisbgq4tu579nq8800.apps.googleusercontent.com';
-var CLIENT_SECRET = 'usHCpy7ndmuYy1cF3td7ytBV';
-var REDIRECT_URL = 'http://cat-prototype.herokuapp.com/' + 'google/oauth2callback';
+var CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+var CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+var REDIRECT_URL = process.env.GOOGLE_REDIRECT_URL + 'google/oauth2callback';
 
-//localhost redirect: 'http://localhost:3003/'
-//google redirect: 'http://cat-prototype.herokuapp.com/'
-
-//For Client Side logging in
 var OAuth2 = googleapis.auth.OAuth2;
 
-var SERVICE_ACCOUNT_EMAIL = '614118273237-o9khb1d1dqlj54f36jp5nsvjnehvd7i6@developer.gserviceaccount.com';
-var SERVICE_ACCOUNT_KEY_FILE = './server/8372a6920e994e4154836785bc1c3fe5a26e1a11-privatekey.pem';
+var SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_EMAIL;
+var SERVICE_ACCOUNT_KEY_FILE = process.env.GOOGLE_SERVICE_EMAIL_KEY;
 
 function GoogleServices(options){}
 

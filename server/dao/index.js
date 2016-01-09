@@ -1,5 +1,5 @@
 var pg = require('pg.js'),
-conString = "postgres://tinrklywlxfrri:hk39mjf6cN-_rbsXRXWYjhD0Wc@ec2-107-21-223-147.compute-1.amazonaws.com:5432/d9vled6ah1g453?ssl=true",
+conString = process.env.DB_CONN,
 handleError;
 
 function pgDAO (options){
@@ -77,11 +77,11 @@ pgDAO.prototype.initialize = function(){
 pgDAO.prototype.getConnection = function(queryObject,callback,errCallback){
 	// get a pg client from the connection pool
   var client = new pg.Client({
-    user: "tinrklywlxfrri",
-    password: "hk39mjf6cN-_rbsXRXWYjhD0Wc",
-    database: "d9vled6ah1g453",
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     port: 5432,
-    host: "ec2-107-21-223-147.compute-1.amazonaws.com",
+    host: process.env.DB_HOST,
     ssl: true
 	}); 
 	client.connect();
