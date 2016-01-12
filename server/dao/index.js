@@ -2,6 +2,8 @@ var pg = require('pg.js'),
 conString = process.env.DB_CONN,
 handleError;
 
+pg.defaults.poolSize = 10;
+
 function pgDAO (options){
 	if (options){
 		conString = options.pgURL;

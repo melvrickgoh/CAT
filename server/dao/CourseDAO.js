@@ -6,10 +6,6 @@ function CourseDAO(options){
 	this.ADMIN_EXERCISE = 'adminexercise',
 	this.lessonMeta = {};
 
-	if (options){
-		dao = new pgDAO({pgURL:options.pgURL});
-	}
-
 	this.loadLessonDetails();//load in lesson meta for future reference
 	/*this.createExerciseTable(function(isSuccess,result){
 		console.log(isSuccess);
@@ -146,12 +142,8 @@ CourseDAO.prototype.insertNewLessons = function(courses,callback){
 			{name:'objective',type:'string'}],
 		values:courseExtracts
 	};
-	dao.checkTableExists(this.TABLENAME,function(exists,result){
-		if (exists){
-			dao.insert(newCourseDetails,function(isSuccess,result){
-				callback(isSuccess,result);
-			});
-		}
+	dao.insert(newCourseDetails,function(isSuccess,result){
+		callback(isSuccess,result);
 	});
 }
 
@@ -296,12 +288,8 @@ CourseDAO.prototype.insertNewAdminExercises = function(exercises,callback){
 			{name:'masterid',type:'string'}],
 		values:exerciseExtracts
 	};
-	dao.checkTableExists(this.ADMIN_EXERCISE,function(exists,result){
-		if (exists){
-			dao.insert(newExerciseDetails,function(isSuccess,result){
-				callback(isSuccess,result);
-			});
-		}
+	dao.insert(newExerciseDetails,function(isSuccess,result){
+		callback(isSuccess,result);
 	});
 }
 
@@ -381,14 +369,11 @@ CourseDAO.prototype.insertNewExercises = function(exercises,callback){
 			{name:'masterid',type:'string'}],
 		values:exerciseExtracts
 	};
-	dao.checkTableExists(this.EXERCISE_TABLE_NAME,function(exists,result){
-		if (exists){
-			dao.insert(newExerciseDetails,function(isSuccess,result){
-				callback(isSuccess,result);
-			});
-		}
+	dao.insert(newExerciseDetails,function(isSuccess,result){
+		callback(isSuccess,result);
 	});
 }
+
 
 CourseDAO.prototype.updateLesson = function(lesson,callback){
 	var updateLessonDetails = {

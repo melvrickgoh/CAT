@@ -38,6 +38,8 @@ FileController.prototype.loadInFiles = function(jsonFileList,callback){
 			//getting lesson details from pgDB
 			asyncOngoing = true;
 			var lessonDetails = courseDAO.getLesson(validatedFileRes.lesson);
+			console.log("getting lesson meta");
+			console.log(lessonDetails);
 			file.lessonDetails = lessonDetails;
 			/*var lessonDetails = courseDAO.getLesson(validatedFileRes.lesson,exComponent[file.exercise],function(componentObject,isSuccess,result){
 				var lessonDetails = result[0];
@@ -88,15 +90,13 @@ FileController.prototype.validateFileTitle = function(title){
 FileController.prototype.validateURLPattern = function(file){
 	var exerciseTitle = file.exerciseTitle,
 	urlPattern = exerciseTitle.replace(/\s+/g, '');
-	courseDAO.checkExerciseExistsURL(exerciseTitle,function(exists){
-		if (!exists){
-			file.urlPattern = urlPattern;
-			courseDAO.insertNewExercises([file],function(isSuccess,result){
-				//console.log(isSuccess);
-				//console.log(result);
-			});
-		}
+
+	file.urlPattern = urlPattern;
+	courseDAO.insertNewExercises([file],function(isSuccess,result){
+		console.log(isSuccess);
+		console.log(result);
 	});
+
 	return urlPattern
 }
 

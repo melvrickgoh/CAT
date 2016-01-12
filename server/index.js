@@ -804,7 +804,7 @@ function _redirectLoggedInUser(req, res, destinationPath, loggedInUser) {
 			if (loggedInUser.role == 'admin') {
 				res.redirect('/service');
 			} else {
-				res.redirect('/home');
+				res.redirect('/lessons');
 			}
 	}
 }
