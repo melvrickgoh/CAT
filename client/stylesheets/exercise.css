@@ -14,6 +14,17 @@
 .main .page-header {
   margin-top: 0;
 }
+.alert.alert-info {
+  position: absolute;
+  background-color: rgba(0,0,0,0.75);
+  width: 100%;
+}
+.alert-link {
+  color: #F5F5F5 !important;
+}
+.alert-link bold {
+  color: #82C5FF;
+}
 
 /*
 * Google Docs Jumbotron

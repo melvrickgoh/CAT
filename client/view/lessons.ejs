@@ -78,8 +78,8 @@
      </div>
   </nav>
 
-  <div class="container container-xs-height">
-        <div class="row row-xs-height">
+  <div class="lesson-menu">
+        <div class="row">
             <% if (lessonKeys.length >= 1) {
               lessonKeys.forEach(function(key){ 
                   var exercises = files[key];
@@ -96,15 +96,15 @@
                           </h3>
                        </div>
                        <div class="panel-body col-xs-height">
-                          <ul>
+                          <ul class="lesson-ul">
                             <%   
                               var objList = objective.split('<xx>');
                               for(var k in objList){
                                 %><li><%=objList[k]%></li><%
                               }
                               if (exerciseKeys.length >= 1){%>
-                                <li><a data-toggle="collapse" data-parent="#accordion" href="#collapse<%=key%>">Exercises</a></li>
-                                <ul id="collapse<%=key%>" class="panel-collapse collapse in">
+                                <li class="lesson-data-section"><a class="lesson-data-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapse<%=key%>">Exercises</a></li>
+                                <ul id="collapse<%=key%>" class="panel-collapse collapse in exercise-links">
                               <%exerciseKeys.forEach(function(key){
                                 var validateExerciseTitle = function(exerciseTitle){
                                   var urlPattern = exerciseTitle.replace(/\s+/g, '');
